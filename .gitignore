@@ -2,21 +2,19 @@
 __pycache__/
 *.py[cod]
 *.pyo
+*.pyc
 
 # VS Code
 .vscode/
 
-# Env
+# Env files
 .env
 *.env
 
-# Virtual env
+# Virtual environments
 venv/
 env/
 
-# Bytecode cache
-*.pyc
-
-# OS
+# OS-specific files
 .DS_Store
 Thumbs.db
