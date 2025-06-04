@@ -7,13 +7,13 @@ from api import reset
 from api import request
 from api import temperature
 from fastapi import FastAPI
-from dotenv import load_dotenv  # ⚠️ thêm dòng này
+from dotenv import load_dotenv
 from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 
-load_dotenv()  # ⚠️ và dòng này
+load_dotenv()
 
 
 app = FastAPI()

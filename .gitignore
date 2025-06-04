@@ -1,2 +1,22 @@
-# Bỏ qua file môi trường
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# VS Code
+.vscode/
+
+# Env
 .env
+*.env
+
+# Virtual env
+venv/
+env/
+
+# Bytecode cache
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db
