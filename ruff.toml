@@ -1,0 +1,14 @@
+# ruff.toml - tối ưu khi dùng cùng black
+line-length = 88            # giống với mặc định của black
+target-version = "py312"    # hoặc py311, py310 tùy bạn
+
+extend-select = [
+  "B",  # bugbear: cảnh báo lỗi logic
+  "I",  # isort: sắp xếp import
+  "UP", # pyupgrade: gợi ý nâng cấp cú pháp
+]
+
+extend-ignore = [
+  "E203",  # black không thích dấu 2 chấm sát nhau
+  "W503",  # black thích toán tử xuống dòng sau
+]

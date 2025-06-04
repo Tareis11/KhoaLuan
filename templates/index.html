@@ -1,0 +1,275 @@
+<!-- Smart Locker Status Dashboard
+     HTML/CSS/JS thuần túy, không cần server, responsive, dễ hiểu.
+     Mô phỏng trạng thái tủ, WiFi, QR bằng nút bấm và icon SVG.
+-->
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Smart Locker Dashboard</title>
+    <style>
+      /* Reset và font */
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: #f4f6fa;
+        color: #222;
+      }
+      h1 {
+        text-align: center;
+        margin-top: 24px;
+        font-size: 2rem;
+      }
+      .wifi-status {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 16px 0;
+        font-size: 1.1rem;
+      }
+      .wifi-icon {
+        width: 28px;
+        height: 28px;
+        margin-right: 8px;
+        vertical-align: middle;
+      }
+      /* Lưới 3 cột cho các tủ */
+      .locker-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      /* Card cho từng tủ */
+      .locker-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px #0001;
+        padding: 24px 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: box-shadow 0.2s;
+      }
+      .locker-card:hover {
+        box-shadow: 0 4px 16px #0002;
+      }
+      .locker-title {
+        font-weight: bold;
+        margin-bottom: 12px;
+        font-size: 1.1rem;
+      }
+      .status-icon {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 10px;
+      }
+      .status-label {
+        font-size: 1rem;
+        margin-bottom: 8px;
+      }
+      .qr-message {
+        min-height: 24px;
+        font-size: 0.95rem;
+        color: #555;
+        margin-bottom: 10px;
+        text-align: center;
+      }
+      .btn-group {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .btn {
+        padding: 6px 14px;
+        border: none;
+        border-radius: 6px;
+        background: #e0e7ef;
+        color: #222;
+        cursor: pointer;
+        font-size: 0.95rem;
+        transition: background 0.2s;
+      }
+      .btn:hover {
+        background: #bcd4f6;
+      }
+      /* Responsive cho mobile */
+      @media (max-width: 800px) {
+        .locker-grid {
+          grid-template-columns: 1fr;
+          max-width: 400px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Smart Locker Dashboard</h1>
+    <!-- Trạng thái WiFi -->
+    <div class="wifi-status" id="wifiStatus">
+      <!-- SVG icon WiFi sẽ được JS thay đổi -->
+      <span id="wifiIcon"></span>
+      <span id="wifiText">Đang kết nối với ESP ...</span>
+      <!-- Nút mô phỏng đổi trạng thái WiFi -->
+      <button class="btn" onclick="toggleWifi()">Đổi trạng thái</button>
+    </div>
+
+    <!-- Lưới 3 tủ -->
+    <div class="locker-grid">
+      <!-- Card tủ 1 -->
+      <div class="locker-card" id="locker0">
+        <div class="locker-title">Tủ 1</div>
+        <span class="status-icon" id="icon0"></span>
+        <div class="status-label" id="status0">Đang kết nối...</div>
+        <div class="qr-message" id="qrMsg0">Quét mã QR để mở tủ</div>
+        <div class="btn-group">
+          <button class="btn" onclick="setLockerStatus(0, 'connecting')">
+            Đang kết nối
+          </button>
+          <button class="btn" onclick="setLockerStatus(0, 'success')">
+            Thành công
+          </button>
+          <button class="btn" onclick="setLockerStatus(0, 'fail')">
+            Thất bại
+          </button>
+        </div>
+      </div>
+      <!-- Card tủ 2 -->
+      <div class="locker-card" id="locker1">
+        <div class="locker-title">Tủ 2</div>
+        <span class="status-icon" id="icon1"></span>
+        <div class="status-label" id="status1">Đang kết nối...</div>
+        <div class="qr-message" id="qrMsg1">Quét mã QR để mở tủ</div>
+        <div class="btn-group">
+          <button class="btn" onclick="setLockerStatus(1, 'connecting')">
+            Đang kết nối
+          </button>
+          <button class="btn" onclick="setLockerStatus(1, 'success')">
+            Thành công
+          </button>
+          <button class="btn" onclick="setLockerStatus(1, 'fail')">
+            Thất bại
+          </button>
+        </div>
+      </div>
+      <!-- Card tủ 3 -->
+      <div class="locker-card" id="locker2">
+        <div class="locker-title">Tủ 3</div>
+        <span class="status-icon" id="icon2"></span>
+        <div class="status-label" id="status2">Đang kết nối...</div>
+        <div class="qr-message" id="qrMsg2">Quét mã QR để mở tủ</div>
+        <div class="btn-group">
+          <button class="btn" onclick="setLockerStatus(2, 'connecting')">
+            Đang kết nối
+          </button>
+          <button class="btn" onclick="setLockerStatus(2, 'success')">
+            Thành công
+          </button>
+          <button class="btn" onclick="setLockerStatus(2, 'fail')">
+            Thất bại
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // SVG icon cho các trạng thái
+      const icons = {
+        wifiConnecting: `<svg class="wifi-icon" viewBox="0 0 24 24">
+<circle cx="12" cy="20" r="2" fill="#2196f3">
+    <animate attributeName="opacity" values="1;0.2;1" dur="1s" repeatCount="indefinite"/>
+  </circle>
+  <path d="M2 8c5-5 15-5 20 0" stroke="#2196f3" stroke-width="2" fill="none">
+    <animate attributeName="opacity" values="0.2;1;0.2" dur="1.5s" repeatCount="indefinite"/>
+  </path>
+  <path d="M6 12c3-3 9-3 12 0" stroke="#2196f3" stroke-width="2" fill="none">
+    <animate attributeName="opacity" values="1;0.2;1" dur="1.5s" repeatCount="indefinite"/>
+  </path>
+</svg>`,
+        wifiSuccess: `<svg class="wifi-icon" viewBox="0 0 24 24"><circle cx="12" cy="20" r="2" fill="#4caf50"/><path d="M2 8c5-5 15-5 20 0" stroke="#4caf50" stroke-width="2" fill="none"/><path d="M6 12c3-3 9-3 12 0" stroke="#4caf50" stroke-width="2" fill="none"/></svg>`,
+        wifiFail: `<svg class="wifi-icon" viewBox="0 0 24 24"><circle cx="12" cy="20" r="2" fill="#f44336"/><path d="M2 8c5-5 15-5 20 0" stroke="#f44336" stroke-width="2" fill="none"/><path d="M6 12c3-3 9-3 12 0" stroke="#f44336" stroke-width="2" fill="none"/><line x1="6" y1="6" x2="18" y2="18" stroke="#f44336" stroke-width="2"/></svg>`,
+        connecting: `<svg class="status-icon" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" stroke="#2196f3" stroke-width="4" fill="none" opacity="0.3"/><circle cx="24" cy="24" r="16" stroke="#2196f3" stroke-width="4" fill="none" stroke-dasharray="100" stroke-dashoffset="60"><animateTransform attributeName="transform" type="rotate" from="0 24 24" to="360 24 24" dur="1s" repeatCount="indefinite"/></circle></svg>`,
+        success: `<svg class="status-icon" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="#e8f5e9"/><path d="M16 24l6 6 10-12" stroke="#4caf50" stroke-width="4" fill="none" stroke-linecap="round"/></svg>`,
+        fail: `<svg class="status-icon" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="#ffebee"/><line x1="16" y1="16" x2="32" y2="32" stroke="#f44336" stroke-width="4"/><line x1="32" y1="16" x2="16" y2="32" stroke="#f44336" stroke-width="4"/></svg>`,
+      };
+
+      // Trạng thái WiFi: 0 = connecting, 1 = success, 2 = fail
+      let wifiState = 0;
+      function renderWifi() {
+        const wifiIcon = document.getElementById("wifiIcon");
+        const wifiText = document.getElementById("wifiText");
+        if (wifiState === 0) {
+          wifiIcon.innerHTML = icons.wifiConnecting;
+          wifiText.textContent = "Đang kết nối với ESP32...";
+        } else if (wifiState === 1) {
+          wifiIcon.innerHTML = icons.wifiSuccess;
+          wifiText.textContent = "Đã kết nối ESP32";
+        } else {
+          wifiIcon.innerHTML = icons.wifiFail;
+          wifiText.textContent = "Kết nối với ESP32 thất bại";
+        }
+      }
+      function toggleWifi() {
+        wifiState = (wifiState + 1) % 3;
+        renderWifi();
+      }
+      renderWifi();
+
+      // Trạng thái từng tủ: connecting, success, fail
+      const lockerStates = [
+        { status: "connecting", msg: "Quét mã QR để mở tủ" },
+        { status: "connecting", msg: "Quét mã QR để mở tủ" },
+        { status: "connecting", msg: "Quét mã QR để mở tủ" },
+      ];
+      function renderLocker(idx) {
+        const icon = document.getElementById("icon" + idx);
+        const status = document.getElementById("status" + idx);
+        const qrMsg = document.getElementById("qrMsg" + idx);
+        const state = lockerStates[idx].status;
+        // Hiển thị icon và trạng thái
+        if (state === "connecting") {
+          icon.innerHTML = icons.connecting;
+          status.textContent = "Đang kết nối...";
+          qrMsg.textContent = lockerStates[idx].msg;
+          qrMsg.style.color = "#555";
+        } else if (state === "success") {
+          icon.innerHTML = icons.success;
+          status.textContent = "Đã mở khóa!";
+          qrMsg.textContent = "Mở tủ thành công. Vui lòng lấy đồ!";
+          qrMsg.style.color = "#388e3c";
+        } else {
+          icon.innerHTML = icons.fail;
+          status.textContent = "Mở khóa thất bại!";
+          qrMsg.textContent = "Vui lòng thử lại hoặc liên hệ hỗ trợ.";
+          qrMsg.style.color = "#d32f2f";
+        }
+      }
+      function setLockerStatus(idx, status) {
+        lockerStates[idx].status = status;
+        renderLocker(idx);
+      }
+      // Khởi tạo giao diện các tủ
+      for (let i = 0; i < 3; i++) renderLocker(i);
+      async function checkTemperature() {
+        try {
+          // Giả sử lockerId = 1 (hoặc bạn có thể lặp qua các tủ)
+          const res = await fetch("/api/temperature");
+          if (res.ok) {
+            const data = await res.json();
+            if (data.temperatureLogs && data.temperatureLogs.length > 0) {
+              // Có dữ liệu nhiệt độ => đã kết nối ESP
+              wifiState = 1;
+              renderWifi();
+            }
+          }
+        } catch (e) {
+          // Nếu lỗi (mất kết nối), có thể chuyển sang trạng thái fail nếu muốn
+          // wifiState = 2; renderWifi();
+        }
+      }
+    </script>
+  </body>
+</html>
