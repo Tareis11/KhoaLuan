@@ -1,0 +1,110 @@
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: #f4f6fa;
+  color: #222;
+}
+h1 {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 2rem;
+}
+.wifi-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 16px 0;
+  font-size: 1.1rem;
+}
+.wifi-icon {
+  width: 28px;
+  height: 28px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+/* Lưới 3 cột cho các tủ */
+.locker-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+/* Card cho từng tủ */
+.locker-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px #0001;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: box-shadow 0.2s;
+}
+.locker-card:hover {
+  box-shadow: 0 4px 16px #0002;
+}
+.locker-title {
+  font-weight: bold;
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+}
+.status-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 10px;
+}
+.status-label {
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+.qr-message {
+  min-height: 24px;
+  font-size: 0.95rem;
+  color: #555;
+  margin-bottom: 10px;
+  text-align: center;
+}
+.btn-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  background: #e0e7ef;
+  color: #222;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.2s;
+}
+.btn:hover {
+  background: #bcd4f6;
+}
+/* Responsive cho mobile */
+@media (max-width: 800px) {
+  .locker-grid {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+  }
+}
+.btn-unlock {
+  background: #2196f3;
+  color: #fff;
+  font-weight: bold;
+  margin-right: 8px;
+}
+.btn-qr {
+  background: #f321e2;
+  color: #fff;
+  border: 1px solid #f3219c;
+  font-weight: bold;
+}
+.btn-unlock:hover,
+.btn-qr:hover {
+  opacity: 0.85;
+}

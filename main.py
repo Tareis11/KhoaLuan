@@ -1,4 +1,5 @@
 from dotenv import load_dotenv
+from fastapi.staticfiles import StaticFiles
 
 load_dotenv()
 from fastapi import FastAPI, Request
@@ -25,7 +26,7 @@ app.include_router(reset.router)
 app.include_router(request.router)
 app.include_router(temperature.router)
 app.include_router(lockers.router)
-
+app.mount("/styles", StaticFiles(directory="styles"), name="styles")
 
 templates = Jinja2Templates(directory="templates")
 
