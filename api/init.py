@@ -1,13 +1,12 @@
 # 📄 locker-fastapi/api/init.py
 
+from db import db
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 
 router = APIRouter()
-client = AsyncIOMotorClient(os.getenv("MONGODB_URI"))
-db = client["locker_system"]
 
 
 @router.post("/api/init")

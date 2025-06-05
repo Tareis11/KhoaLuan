@@ -1,20 +1,20 @@
-from api import init
-from api import lockers
-from api import unlock
-from api import toggle
-from api import history
-from api import reset
-from api import request
-from api import temperature
-from fastapi import FastAPI
 from dotenv import load_dotenv
-from fastapi import Request
+
+load_dotenv()
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-
-load_dotenv()
-
+from api import (
+    init,
+    lockers,
+    unlock,
+    toggle,
+    history,
+    reset,
+    request,
+    temperature,
+)
 
 app = FastAPI()
 app.include_router(init.router)

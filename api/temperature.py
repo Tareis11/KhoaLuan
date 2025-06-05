@@ -1,3 +1,4 @@
+from db import db
 from fastapi import APIRouter
 from pydantic import BaseModel
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -5,8 +6,6 @@ from datetime import datetime, timedelta  # ✅ dùng timedelta để cộng gi�
 import os
 
 router = APIRouter()
-client = AsyncIOMotorClient(os.getenv("MONGODB_URI"))
-db = client["locker_system"]
 
 
 # Data model cho ESP gửi nhiệt độ

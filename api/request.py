@@ -1,3 +1,4 @@
+from db import db
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -6,8 +7,6 @@ from datetime import datetime
 import os, random
 
 router = APIRouter()
-client = AsyncIOMotorClient(os.getenv("MONGODB_URI"))
-db = client["locker_system"]
 
 
 # POST /api/request (ESP gửi mã code)

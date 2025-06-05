@@ -1,3 +1,4 @@
+from db import db
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -6,8 +7,6 @@ from datetime import datetime, timedelta
 import os
 
 router = APIRouter()
-client = AsyncIOMotorClient(os.getenv("MONGODB_URI"))
-db = client["locker_system"]
 
 
 class ResetRequest(BaseModel):

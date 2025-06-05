@@ -1,3 +1,4 @@
+from db import db
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -5,8 +6,7 @@ from datetime import datetime
 import os
 
 router = APIRouter()
-client = AsyncIOMotorClient(os.getenv("MONGODB_URI"))
-db = client["locker_system"]
+
 
 @router.get("/api/history")
 async def get_history(request: Request):
@@ -16,7 +16,9 @@ async def get_history(request: Request):
         try:
             query["lockerNumber"] = int(locker_number)
         except ValueError:
-            return JSONResponse(content={"error": "Invalid lockerNumber"}, status_code=400)
+            return JSONResponse(
+                content={"error": "Invalid lockerNumber"}, status_code=400
+            )
 
     history = await db.locker_history.find(query).sort("timestamp", -1).to_list(100)
     for item in history:
