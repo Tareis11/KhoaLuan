@@ -1,10 +1,9 @@
 from db import db
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
 from datetime import datetime, timedelta
-import os
+
 
 router = APIRouter()
 

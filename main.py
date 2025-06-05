@@ -4,7 +4,6 @@ load_dotenv()
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-
 from api import (
     init,
     lockers,
@@ -15,6 +14,7 @@ from api import (
     request,
     temperature,
 )
+
 
 app = FastAPI()
 app.include_router(init.router)

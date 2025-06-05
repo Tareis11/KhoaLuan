@@ -1,9 +1,8 @@
 from db import db
 from fastapi import APIRouter
 from pydantic import BaseModel
-from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import datetime, timedelta  # ✅ dùng timedelta để cộng giờ
-import os
+
 
 router = APIRouter()
 

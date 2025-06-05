@@ -1,8 +1,7 @@
 from db import db
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-from motor.motor_asyncio import AsyncIOMotorClient
-import os
+
 
 router = APIRouter()
 

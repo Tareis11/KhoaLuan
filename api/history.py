@@ -1,9 +1,8 @@
 from db import db
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
-from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import datetime
-import os
+
 
 router = APIRouter()
 
