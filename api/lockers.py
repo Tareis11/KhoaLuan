@@ -9,7 +9,7 @@ router = APIRouter()
 @router.get("/api/lockers")
 async def get_all_lockers():
     try:
-        lockers = await db.locker.find().to_list(length=None)
+        lockers = await db.locker.find().sort("number", 1).to_list(length=None)
 
         for locker in lockers:
             locker["_id"] = str(locker["_id"])

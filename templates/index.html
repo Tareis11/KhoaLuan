@@ -294,7 +294,7 @@
       function unlockLocker(idx) {
         // Xác định action dựa vào trạng thái hiện tại
         const current = lockerStates[idx].status;
-        const isLocked = lockerStates[idx].isLocked;
+        const isLocked = lockerStates[idx].isLocked; // <-- Lấy đúng giá trị này
 
         let action;
         if (
