@@ -50,8 +50,10 @@
     <!-- Lưới 3 tủ -->
     <div class="locker-grid">
       <!-- Card tủ 1 -->
+
       <div class="locker-card" id="locker0">
         <div class="locker-title">Tủ 1</div>
+        <div class="locker-state" id="lockerState0"></div>
         <span class="status-icon" id="icon0"></span>
         <div class="status-label" id="status0">Đang kết nối...</div>
         <div class="qr-message" id="qrMsg0">Quét mã QR để mở tủ</div>
@@ -76,6 +78,7 @@
       <!-- Card tủ 2 -->
       <div class="locker-card" id="locker1">
         <div class="locker-title">Tủ 2</div>
+        <div class="locker-state" id="lockerState1"></div>
         <span class="status-icon" id="icon1"></span>
         <div class="status-label" id="status1">Đang kết nối...</div>
         <div class="qr-message" id="qrMsg1">Quét mã QR để mở tủ</div>
@@ -100,6 +103,7 @@
       <!-- Card tủ 3 -->
       <div class="locker-card" id="locker2">
         <div class="locker-title">Tủ 3</div>
+        <div class="locker-state" id="lockerState2"></div>
         <span class="status-icon" id="icon2"></span>
         <div class="status-label" id="status2">Đang kết nối...</div>
         <div class="qr-message" id="qrMsg2">Quét mã QR để mở tủ</div>
@@ -132,8 +136,9 @@
         connecting: `<svg class="status-icon" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" stroke="#2196f3" stroke-width="4" fill="none" opacity="0.3"/><circle cx="24" cy="24" r="16" stroke="#2196f3" stroke-width="4" fill="none" stroke-dasharray="100" stroke-dashoffset="60"><animateTransform attributeName="transform" type="rotate" from="0 24 24" to="360 24 24" dur="1s" repeatCount="indefinite"/></circle></svg>`,
         success: `<svg class="status-icon" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="#e8f5e9"/><path d="M16 24l6 6 10-12" stroke="#4caf50" stroke-width="4" fill="none" stroke-linecap="round"/></svg>`,
         fail: `<svg class="status-icon" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="#ffebee"/><line x1="16" y1="16" x2="32" y2="32" stroke="#f44336" stroke-width="4"/><line x1="32" y1="16" x2="16" y2="32" stroke="#f44336" stroke-width="4"/></svg>`,
-      };
-      // Trạng thái WiFi: 0 = connecting, 1 = success, 2 = fail
+        renting: `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2196f3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-lock-icon lucide-user-lock"><circle cx="10" cy="7" r="4"/><path d="M10.3 15H7a4 4 0 0 0-4 4v2"/><path d="M15 15.5V14a2 2 0 0 1 4 0v1.5"/><rect width="8" height="5" x="13" y="16" rx=".899"/></svg>`,
+      }; // Trạng thái WiFi: 0 = connecting, 1 = success, 2 = fail
+
       let wifiState = 0;
       function renderWifi() {
         const wifiIcon = document.getElementById("wifiIcon");
@@ -177,10 +182,15 @@
           status.textContent = "Đã mở khóa!";
           qrMsg.textContent = "Mở tủ thành công. Vui lòng lấy đồ!";
           qrMsg.style.color = "#388e3c";
+        } else if (state === "renting") {
+          icon.innerHTML = icons.renting; // Có thể tạo icons.renting riêng nếu muốn
+          status.textContent = "Tủ đang được thuê";
+          qrMsg.textContent = lockerStates[idx].msg;
+          qrMsg.style.color = "#1976d2";
         } else {
-          icon.innerHTML = icons.fail;
-          status.textContent = "Mở khóa thất bại!";
-          qrMsg.textContent = "Vui lòng thử lại hoặc liên hệ hỗ trợ.";
+          icon.innerHTML = icons.connecting;
+          status.textContent = "Tủ hiện đang trống";
+          qrMsg.textContent = "Đang chờ thuê...";
           qrMsg.style.color = "#d32f2f";
         }
       }
@@ -232,7 +242,57 @@
         alert("Hiển thị mã QR cho tủ " + (idx + 1));
         // TODO: Hiển thị popup QR ở đây
       }
-      // ...existing code...
+      async function fetchLockerStates() {
+        try {
+          const res = await fetch("/api/lockers");
+          if (res.ok) {
+            const data = await res.json();
+            if (data.lockers) {
+              data.lockers.forEach((locker, idx) => {
+                const stateDiv = document.getElementById("lockerState" + idx);
+                if (stateDiv) {
+                  if (locker.isLocked === false) {
+                    stateDiv.textContent = "Đang mở";
+                    stateDiv.style.background = "#e8f5e9";
+                    stateDiv.style.color = "#388e3c";
+                    lockerStates[idx].status = "success";
+                  } else {
+                    stateDiv.textContent = "Đã đóng";
+                    stateDiv.style.background = "#fff3cd";
+                    stateDiv.style.color = "#795548";
+                    lockerStates[idx].status = "fail";
+                  }
+                }
+                if (locker.code && locker.code !== "") {
+                  lockerStates[idx].status = "renting";
+                  lockerStates[idx].msg =
+                    "Tủ đang được thuê. chờ quét mã để mở!";
+                } else if (locker.isLocked === false) {
+                  lockerStates[idx].status = "success";
+                  lockerStates[idx].msg = "Mở tủ thành công. Vui lòng lấy đồ!";
+                } else {
+                  lockerStates[idx].status = "fail";
+                  lockerStates[idx].msg = "Đang chờ thuê...";
+                }
+                renderLocker(idx);
+              });
+            }
+          }
+        } catch (e) {
+          // Nếu lỗi, hiển thị trạng thái không xác định
+          for (let i = 0; i < 3; i++) {
+            const stateDiv = document.getElementById("lockerState" + i);
+            if (stateDiv) {
+              stateDiv.textContent = "Không rõ";
+              stateDiv.style.background = "#eee";
+              stateDiv.style.color = "#888";
+            }
+          }
+        }
+      }
+      // Gọi lần đầu và lặp lại mỗi 5 giây
+      fetchLockerStates();
+      setInterval(fetchLockerStates, 5000);
     </script>
   </body>
 </html>
