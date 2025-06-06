@@ -234,10 +234,6 @@
       // Polling mỗi 5 giây
       setInterval(checkTemperature, 5000);
       // ...existing code...
-      function unlockLocker(idx) {
-        alert("Đã gửi yêu cầu mở/khóa tủ " + (idx + 1));
-        // TODO: Gửi API mở tủ ở đây
-      }
       function showLockerQR(idx) {
         alert("Hiển thị mã QR cho tủ " + (idx + 1));
         // TODO: Hiển thị popup QR ở đây
@@ -249,6 +245,7 @@
             const data = await res.json();
             if (data.lockers) {
               data.lockers.forEach((locker, idx) => {
+                lockerStates[idx].isLocked = locker.isLocked;
                 const stateDiv = document.getElementById("lockerState" + idx);
                 if (stateDiv) {
                   if (locker.isLocked === false) {
@@ -293,6 +290,43 @@
       // Gọi lần đầu và lặp lại mỗi 5 giây
       fetchLockerStates();
       setInterval(fetchLockerStates, 5000);
+      //Hàm nút nhấn thay đổi trạng thái cho  tủ
+      function unlockLocker(idx) {
+        // Xác định action dựa vào trạng thái hiện tại
+        const current = lockerStates[idx].status;
+        const isLocked = lockerStates[idx].isLocked;
+
+        let action;
+        if (
+          current === "success" ||
+          (current === "renting" && isLocked === false)
+        ) {
+          action = "lock";
+        } else {
+          action = "unlock";
+        }
+        // Gửi API toggle
+        fetch("/api/toggle", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lockerId: idx + 1, // Giả sử lockerId bắt đầu từ 1
+            action: action, // "unlock" hoặc "lock"
+          }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.locker) {
+              // Gọi lại fetchLockerStates để cập nhật UI
+              fetchLockerStates();
+            } else {
+              alert(data.error || "Có lỗi xảy ra!");
+            }
+          })
+          .catch(() => {
+            alert("Không thể kết nối server!");
+          });
+      }
     </script>
   </body>
 </html>
