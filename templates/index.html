@@ -252,7 +252,7 @@
                 if (locker.code && locker.code !== "") {
                   lockerStates[idx].status = "renting";
                   lockerStates[idx].msg =
-                    "Tủ đang được thuê. chờ quét mã để mở!";
+                    "Tủ đang được thuê. mở khóa để reset tủ!";
                 } else if (locker.isLocked === false) {
                   lockerStates[idx].status = "success";
                   lockerStates[idx].msg = "Mở tủ thành công. Vui lòng lấy đồ!";
@@ -277,6 +277,32 @@
                   }
                 }
                 renderLocker(idx);
+                // Nếu tủ đang mở, chưa có timer thì đặt timer tự động đóng
+                if (locker.isLocked === false) {
+                  if (!lockerStates[idx].autoLockTimer) {
+                    lockerStates[idx].autoLockTimer = setTimeout(() => {
+                      fetch("/api/toggle", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          lockerId: idx + 1,
+                          action: "lock",
+                        }),
+                      })
+                        .then((res) => res.json())
+                        .then((data) => {
+                          if (data.locker) fetchLockerStates();
+                        });
+                      lockerStates[idx].autoLockTimer = null;
+                    }, 10000);
+                  }
+                } else {
+                  // Nếu tủ đã đóng, xóa timer nếu có
+                  if (lockerStates[idx].autoLockTimer) {
+                    clearTimeout(lockerStates[idx].autoLockTimer);
+                    lockerStates[idx].autoLockTimer = null;
+                  }
+                }
               });
             }
           }
@@ -292,30 +318,30 @@
           }
         }
       }
-      // Gọi lần đầu và lặp lại mỗi 5 giây
+      // Gọi lần đầu và lặp lại mỗi 3 giây
       fetchLockerStates();
-      setInterval(fetchLockerStates, 5000);
+      setInterval(fetchLockerStates, 3000);
       //Hàm nút nhấn thay đổi trạng thái cho  tủ
       function unlockLocker(idx) {
         const current = lockerStates[idx].status;
         const isLocked = lockerStates[idx].isLocked;
         // Hàm tự động đóng tủ sau 10 giây
-        function autoLock() {
-          setTimeout(() => {
-            fetch("/api/toggle", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                lockerId: idx + 1,
-                action: "lock",
-              }),
-            })
-              .then((res) => res.json())
-              .then((data) => {
-                if (data.locker) fetchLockerStates();
-              });
-          }, 10000);
-        }
+        // function autoLock() {
+        //   setTimeout(() => {
+        //     fetch("/api/toggle", {
+        //       method: "POST",
+        //       headers: { "Content-Type": "application/json" },
+        //       body: JSON.stringify({
+        //         lockerId: idx + 1,
+        //         action: "lock",
+        //       }),
+        //     })
+        //       .then((res) => res.json())
+        //       .then((data) => {
+        //         if (data.locker) fetchLockerStates();
+        //       });
+        //   }, 10000);
+        // }
         // Nếu tủ đang được thuê thì gọi API reset với code
         if (current === "renting") {
           fetch("/api/reset", {
@@ -329,7 +355,7 @@
             .then((data) => {
               if (data.locker) {
                 fetchLockerStates();
-                autoLock();
+                // autoLock();
               } else {
                 alert(data.error || "Có lỗi xảy ra!");
               }
@@ -354,7 +380,7 @@
           .then((data) => {
             if (data.locker) {
               fetchLockerStates();
-              autoLock();
+              // autoLock();
             } else {
               alert(data.error || "Có lỗi xảy ra!");
             }
