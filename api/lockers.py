@@ -1,7 +1,7 @@
 from db import db
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-
+from pymongo.errors import PyMongoError
 
 router = APIRouter()
 
@@ -18,6 +18,6 @@ async def get_all_lockers():
 
         return {"lockers": lockers}
 
-    except Exception as e:
+    except PyMongoError as e:
         print("Error fetching lockers:", e)
         return JSONResponse(content={"error": "Internal Server Error"}, status_code=500)

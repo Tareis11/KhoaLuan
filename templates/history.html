@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Lịch sử hoạt động tủ</title>
+    <link rel="stylesheet" href="/styles/history.css" />
+  </head>
+  <body class="history-page">
+    <div class="history-header">
+      <h1>Lịch sử hoạt động tủ</h1>
+      <div class="history-actions">
+        <button class="btn" onclick="window.location.href='/'">Trở về</button>
+        <button class="btn btn-primary" onclick="loadHistory()">Làm mới</button>
+      </div>
+    </div>
+    <div class="history-table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Tủ</th>
+            <th>Hành động</th>
+            <th>Mã</th>
+            <th>Thời gian</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </div>
+    <script>
+      function formatTime(ts) {
+        if (!ts) return "";
+        const d = new Date(ts);
+        const pad = (n) => n.toString().padStart(2, "0");
+        return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(
+          d.getSeconds()
+        )} ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+      }
+
+      async function loadHistory() {
+        const res = await fetch("/api/history");
+        const data = await res.json();
+        const tbody = document.getElementById("historyBody");
+        tbody.innerHTML = "";
+        (data.history || []).forEach((log) => {
+          const locker = log.lockerNumber
+            ? `<span class="locker-badge">Tủ ${log.lockerNumber}</span>`
+            : "";
+          const actionClass =
+            log.action === "unlock"
+              ? "action-badge action-unlock"
+              : "action-badge";
+          const actionText =
+            log.action === "unlock"
+              ? "MỞ KHÓA"
+              : log.action === "reset"
+              ? "RESET"
+              : log.action || "";
+
+          const action = actionText
+            ? `<span class="${actionClass}">${actionText}</span>`
+            : "";
+          const code = log.code
+            ? `<span class="code-badge">${log.code}</span>`
+            : "";
+          const time = log.timestamp ? formatTime(log.timestamp) : "";
+          tbody.innerHTML += `
+            <tr>
+              <td>${locker}</td>
+              <td>${action}</td>
+              <td>${code}</td>
+              <td>${time}</td>
+            </tr>
+          `;
+        });
+      }
+
+      loadHistory();
+      setInterval(loadHistory, 3000);
+    </script>
+  </body>
+</html>

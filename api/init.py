@@ -3,7 +3,7 @@
 from db import db
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-
+from pymongo.errors import PyMongoError
 
 router = APIRouter()
 
@@ -30,7 +30,7 @@ async def full_init():
         for locker in lockers:
             locker["_id"] = str(locker["_id"])
         return {"message": "Initialization successful", "lockers": lockers}
-    except Exception as e:
+    except PyMongoError as e:
         print("Error initializing lockers:", e)
         return JSONResponse(
             content={"error": "Failed to initialize lockers"}, status_code=500

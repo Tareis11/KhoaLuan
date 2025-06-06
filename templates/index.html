@@ -10,7 +10,15 @@
     <title>Smart Locker Dashboard</title>
     <link rel="stylesheet" href="/styles/style.css" />
   </head>
+
   <body>
+    <button
+      class="btn fixed-top-right"
+      onclick="window.location.href='/history'"
+      style="position: fixed; top: 32px; right: 32px"
+    >
+      Xem lịch sử
+    </button>
     <div
       id="temperatureBox"
       style="
@@ -37,7 +45,10 @@
       </svg>
       <span id="temperatureValue">-- °C</span>
     </div>
-    <h1>Smart Locker Dashboard</h1>
+
+    <div class="page-header">
+      <h1>Smart Locker Dashboard</h1>
+    </div>
     <!-- Trạng thái WiFi -->
     <div class="wifi-status" id="wifiStatus">
       <!-- SVG icon WiFi sẽ được JS thay đổi -->
