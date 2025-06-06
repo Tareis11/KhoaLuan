@@ -244,22 +244,11 @@
           if (res.ok) {
             const data = await res.json();
             if (data.lockers) {
-              data.lockers.forEach((locker, idx) => {
+              data.lockers.forEach((locker) => {
+                const idx = locker.number - 1; // Đảm bảo đúng vị trí tủ
                 lockerStates[idx].isLocked = locker.isLocked;
-                const stateDiv = document.getElementById("lockerState" + idx);
-                if (stateDiv) {
-                  if (locker.isLocked === false) {
-                    stateDiv.textContent = "Đang mở";
-                    stateDiv.style.background = "#e8f5e9";
-                    stateDiv.style.color = "#388e3c";
-                    lockerStates[idx].status = "success";
-                  } else {
-                    stateDiv.textContent = "Đã đóng";
-                    stateDiv.style.background = "#fff3cd";
-                    stateDiv.style.color = "#795548";
-                    lockerStates[idx].status = "fail";
-                  }
-                }
+                lockerStates[idx].code = locker.code;
+                // Ưu tiên trạng thái renting
                 if (locker.code && locker.code !== "") {
                   lockerStates[idx].status = "renting";
                   lockerStates[idx].msg =
@@ -270,6 +259,22 @@
                 } else {
                   lockerStates[idx].status = "fail";
                   lockerStates[idx].msg = "Đang chờ thuê...";
+                }
+                const stateDiv = document.getElementById("lockerState" + idx);
+                if (stateDiv) {
+                  if (lockerStates[idx].status === "success") {
+                    stateDiv.textContent = "Đang mở";
+                    stateDiv.style.background = "#e8f5e9";
+                    stateDiv.style.color = "#388e3c";
+                  } else if (lockerStates[idx].status === "renting") {
+                    stateDiv.textContent = "Đang thuê";
+                    stateDiv.style.background = "#e3f2fd";
+                    stateDiv.style.color = "#1976d2";
+                  } else {
+                    stateDiv.textContent = "Đã đóng";
+                    stateDiv.style.background = "#fff3cd";
+                    stateDiv.style.color = "#795548";
+                  }
                 }
                 renderLocker(idx);
               });
@@ -292,33 +297,64 @@
       setInterval(fetchLockerStates, 5000);
       //Hàm nút nhấn thay đổi trạng thái cho  tủ
       function unlockLocker(idx) {
-        // Xác định action dựa vào trạng thái hiện tại
         const current = lockerStates[idx].status;
-        const isLocked = lockerStates[idx].isLocked; // <-- Lấy đúng giá trị này
-
-        let action;
-        if (
-          current === "success" ||
-          (current === "renting" && isLocked === false)
-        ) {
-          action = "lock";
-        } else {
-          action = "unlock";
+        const isLocked = lockerStates[idx].isLocked;
+        // Hàm tự động đóng tủ sau 10 giây
+        function autoLock() {
+          setTimeout(() => {
+            fetch("/api/toggle", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                lockerId: idx + 1,
+                action: "lock",
+              }),
+            })
+              .then((res) => res.json())
+              .then((data) => {
+                if (data.locker) fetchLockerStates();
+              });
+          }, 10000);
         }
-        // Gửi API toggle
+        // Nếu tủ đang được thuê thì gọi API reset với code
+        if (current === "renting") {
+          fetch("/api/reset", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              code: lockerStates[idx].code,
+            }),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.locker) {
+                fetchLockerStates();
+                autoLock();
+              } else {
+                alert(data.error || "Có lỗi xảy ra!");
+              }
+            })
+            .catch(() => {
+              alert("Không thể kết nối server!");
+            });
+          return;
+        }
+
+        // Nếu không phải đang thuê: mở nếu đang đóng, khóa nếu đang mở
+        const action = isLocked ? "unlock" : "lock";
         fetch("/api/toggle", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            lockerId: idx + 1, // Giả sử lockerId bắt đầu từ 1
-            action: action, // "unlock" hoặc "lock"
+            lockerId: idx + 1,
+            action: action,
           }),
         })
           .then((res) => res.json())
           .then((data) => {
             if (data.locker) {
-              // Gọi lại fetchLockerStates để cập nhật UI
               fetchLockerStates();
+              autoLock();
             } else {
               alert(data.error || "Có lỗi xảy ra!");
             }
