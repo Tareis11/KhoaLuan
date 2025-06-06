@@ -180,7 +180,7 @@
         } else if (state === "success") {
           icon.innerHTML = icons.success;
           status.textContent = "Đã mở khóa!";
-          qrMsg.textContent = "Mở tủ thành công. Vui lòng lấy đồ!";
+          qrMsg.textContent = "Đóng tự động sau 10 ~ 15 giây!";
           qrMsg.style.color = "#388e3c";
         } else if (state === "renting") {
           icon.innerHTML = icons.renting; // Có thể tạo icons.renting riêng nếu muốn
@@ -229,10 +229,9 @@
       }
       // Gọi lần đầu và lặp lại mỗi 5 giây
       checkTemperature();
-      setInterval(checkTemperature, 5000);
-
       // Polling mỗi 5 giây
       setInterval(checkTemperature, 5000);
+
       // ...existing code...
       function showLockerQR(idx) {
         alert("Hiển thị mã QR cho tủ " + (idx + 1));
@@ -251,8 +250,7 @@
                 // Ưu tiên trạng thái renting
                 if (locker.code && locker.code !== "") {
                   lockerStates[idx].status = "renting";
-                  lockerStates[idx].msg =
-                    "Tủ đang được thuê. mở khóa để reset tủ!";
+                  lockerStates[idx].msg = "Mở khóa để RESET tủ!";
                 } else if (locker.isLocked === false) {
                   lockerStates[idx].status = "success";
                   lockerStates[idx].msg = "Mở tủ thành công. Vui lòng lấy đồ!";
