@@ -33,6 +33,8 @@ h1 {
 }
 /* Card cho từng tủ */
 .locker-card {
+  position: relative;
+  display: flex;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 2px 8px #0001;
@@ -41,6 +43,7 @@ h1 {
   flex-direction: column;
   align-items: center;
   transition: box-shadow 0.2s;
+  justify-content: space-between;
 }
 .locker-card:hover {
   box-shadow: 0 4px 16px #0002;
@@ -121,7 +124,4 @@ h1 {
   box-shadow: 0 1px 4px #0001;
   font-weight: 500;
   z-index: 2;
-}
-.locker-card {
-  position: relative;
 }
