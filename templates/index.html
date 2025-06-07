@@ -165,15 +165,22 @@
 
       // Trạng thái từng tủ: connecting, success, fail
       const lockerStates = [
-        { status: "connecting", msg: "Quét mã QR để mở tủ" },
-        { status: "connecting", msg: "Quét mã QR để mở tủ" },
-        { status: "connecting", msg: "Quét mã QR để mở tủ" },
+        { status: "connecting", msg: "Quét mã QR để mở tủ", loading: false },
+        { status: "connecting", msg: "Quét mã QR để mở tủ", loading: false },
+        { status: "connecting", msg: "Quét mã QR để mở tủ", loading: false },
       ];
       function renderLocker(idx) {
         const icon = document.getElementById("icon" + idx);
         const status = document.getElementById("status" + idx);
         const qrMsg = document.getElementById("qrMsg" + idx);
         const state = lockerStates[idx].status;
+        if (lockerStates[idx].loading) {
+          icon.innerHTML = icons.connecting;
+          status.textContent = "Đang tải...";
+          qrMsg.textContent = "";
+          qrMsg.style.color = "#555";
+          return;
+        }
         // Hiển thị icon và trạng thái
         if (state === "connecting") {
           icon.innerHTML = icons.connecting;
@@ -248,6 +255,9 @@
             if (data.lockers) {
               data.lockers.forEach((locker) => {
                 const idx = locker.number - 1; // Đảm bảo đúng vị trí tủ
+                const prev = JSON.stringify(lockerStates[idx]);
+                // So sánh trạng thái cũ và mới, chỉ render nếu khác
+                const prevStatus = lockerStates[idx].status;
                 lockerStates[idx].isLocked = locker.isLocked;
                 lockerStates[idx].code = locker.code;
                 // Ưu tiên trạng thái renting
@@ -261,6 +271,7 @@
                   lockerStates[idx].status = "fail";
                   lockerStates[idx].msg = "Đang chờ thuê...";
                 }
+                //Cập nhật badge trạng thái
                 const stateDiv = document.getElementById("lockerState" + idx);
                 if (stateDiv) {
                   if (lockerStates[idx].status === "success") {
@@ -277,7 +288,9 @@
                     stateDiv.style.color = "#795548";
                   }
                 }
-                renderLocker(idx);
+                if (JSON.stringify(lockerStates[idx]) !== prev) {
+                  renderLocker(idx);
+                }
                 // Nếu tủ đang mở, chưa có timer thì đặt timer tự động đóng
                 if (locker.isLocked === false) {
                   if (!lockerStates[idx].autoLockTimer) {

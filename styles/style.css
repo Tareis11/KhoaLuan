@@ -56,10 +56,11 @@ h1 {
   box-shadow: 0 2px 8px #0001;
   padding: 24px 16px;
   min-height: 280px;
-  transition: box-shadow 0.2s;
+  transition: box-shadow 0.2s, transform 0.2s;
 }
 .locker-card:hover {
   box-shadow: 0 4px 16px #0002;
+  transform: scale(1.03);
 }
 .locker-title {
   font-weight: bold;

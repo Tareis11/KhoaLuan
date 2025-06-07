@@ -75,6 +75,7 @@ th {
 tbody tr {
   border-bottom: 1px solid #e0e7ef;
   transition: background 0.2s;
+  cursor: pointer;
 }
 tbody tr:hover {
   background: #f4f6fa;
