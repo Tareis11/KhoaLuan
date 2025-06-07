@@ -91,8 +91,7 @@ tbody tr:hover {
   padding: 0;
   font-family: "Segoe UI", Arial, sans-serif;
   background: linear-gradient(rgba(30, 40, 60, 0.7), rgba(30, 40, 60, 0.7)),
-    url("https://i.ibb.co/j9tCQ3xN/illustration-1.png") no-repeat center
-      center/cover;
+    url("/images/background.png") no-repeat center center/cover;
   background-size: cover;
   color: #222;
 }

@@ -27,7 +27,7 @@ app.include_router(request.router)
 app.include_router(temperature.router)
 app.include_router(lockers.router)
 app.mount("/styles", StaticFiles(directory="styles"), name="styles")
-app.mount("/icons", StaticFiles(directory="icons"), name="icons")  # Thêm dòng này
+app.mount("/images", StaticFiles(directory="images"), name="images")  # Thêm dòng này
 
 templates = Jinja2Templates(directory="templates")
 
