@@ -1,3 +1,6 @@
+html {
+  font-size: 125%;
+}
 .page-header h1 {
   font-size: 2rem;
   font-weight: 700;
@@ -11,9 +14,13 @@
 body {
   margin: 0;
   font-family: "Segoe UI", Arial, sans-serif;
-  background: #f4f6fa;
+  background: linear-gradient(rgba(30, 40, 60, 0.7), rgba(30, 40, 60, 0.7)),
+    url("https://i.ibb.co/j9tCQ3xN/illustration-1.png") no-repeat center
+      center/cover;
+  background-size: cover;
   color: #222;
 }
+
 h1 {
   text-align: center;
   margin-top: 24px;
@@ -110,15 +117,20 @@ h1 {
   color: #fff;
   font-weight: bold;
   margin-right: 8px;
+  box-shadow: 0 2px 8px #2196f344;
 }
 .btn-qr {
   background: #ff7f50;
   color: #fff;
   font-weight: bold;
+  box-shadow: 0 2px 8px #2196f344;
 }
-.btn-unlock:hover,
+.btn-unlock:hover {
+  background: #0e4c7f;
+  opacity: 0.85;
+}
 .btn-qr:hover {
-  background: #bcd4f6;
+  background: #b04821;
   opacity: 0.85;
 }
 
@@ -134,4 +146,55 @@ h1 {
   box-shadow: 0 1px 4px #0001;
   font-weight: 500;
   z-index: 2;
+}
+
+#temperatureBox {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: #fff3cd;
+  color: #795548;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px #0001;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.08rem;
+  z-index: 1000;
+}
+.wifi-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff2f;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.426);
+  padding: 12px 20px;
+  margin: 0 auto 24px auto;
+  max-width: fit-content;
+  font-size: 1.1rem;
+  justify-content: center;
+}
+#wifiIcon {
+  min-width: 10px;
+  min-height: 10px;
+  display: flex;
+  align-items: center;
+}
+.btn-history {
+  font-size: 0.7rem;
+  padding: 12px 28px;
+  background: #2196f3;
+  color: #fff;
+  font-weight: bold;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #2196f344;
+  border: none;
+  transition: background 0.2s;
+  z-index: 1000;
+}
+.btn-history:hover {
+  background: #1769aa;
+  color: #fff;
 }

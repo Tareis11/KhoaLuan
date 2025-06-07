@@ -13,31 +13,14 @@
 
   <body>
     <button
-      class="btn fixed-top-right"
+      class="btn-history"
       onclick="window.location.href='/history'"
       style="position: fixed; top: 32px; right: 32px"
     >
       Xem lịch sử
     </button>
-    <div
-      id="temperatureBox"
-      style="
-        position: fixed;
-        top: 18px;
-        left: 18px;
-        z-index: 10;
-        background: #fff3cd;
-        color: #795548;
-        padding: 8px 18px;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px #0001;
-        font-size: 1.08rem;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      "
-    >
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <div id="temperatureBox">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
         <path
           d="M12 2a2 2 0 0 1 2 2v9.28a4 4 0 1 1-4 0V4a2 2 0 0 1 2-2zm0 16a2 2 0 0 0 2-2c0-.88-.58-1.63-1.38-1.89V7a.62.62 0 0 0-1.24 0v7.11A2 2 0 0 0 12 18z"
           fill="#ff9800"
@@ -50,12 +33,9 @@
       <h1>Smart Locker Dashboard</h1>
     </div>
     <!-- Trạng thái WiFi -->
-    <div class="wifi-status" id="wifiStatus">
-      <!-- SVG icon WiFi sẽ được JS thay đổi -->
-      <span id="wifiIcon"></span>
-      <span id="wifiText">Đang kết nối với ESP ...</span>
-      <!-- Nút mô phỏng đổi trạng thái WiFi -->
-      <!-- <button class="btn" onclick="toggleWifi()">Đổi trạng thái</button> -->
+    <div class="wifi-card">
+      <div id="wifiIcon"></div>
+      <div id="wifiText">Đang kết nối với ESP ...</div>
     </div>
 
     <!-- Lưới 3 tủ -->
@@ -157,12 +137,15 @@
         if (wifiState === 0) {
           wifiIcon.innerHTML = icons.wifiConnecting;
           wifiText.textContent = "Đang kết nối với tủ...";
+          wifiText.style.color = "#2196f3";
         } else if (wifiState === 1) {
           wifiIcon.innerHTML = icons.wifiSuccess;
           wifiText.textContent = "Đã kết nối tủ";
+          wifiText.style.color = "#4caf50";
         } else {
           wifiIcon.innerHTML = icons.wifiFail;
           wifiText.textContent = "Kết nối với tủ thất bại";
+          wifiText.style.color = "#f44336";
         }
       }
       function toggleWifi() {

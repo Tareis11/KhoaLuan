@@ -1,3 +1,6 @@
+html {
+  font-size: 125%;
+}
 .history-header {
   display: flex;
   align-items: center;
@@ -17,12 +20,15 @@
 }
 .history-table-container {
   max-width: 900px;
+  width: 100%;
   margin: 0 auto 40px auto;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 2px 8px #0001;
   padding: 0 0 18px 0;
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: 70vh;
 }
 table {
   width: 100%;
@@ -78,11 +84,17 @@ tbody tr:hover {
   font-family: "Consolas", monospace;
 }
 .history-page {
-  background: #f4f6fa;
+  /* background: #f4f6fa; */
   color: #222;
   font-family: "Segoe UI", Arial, sans-serif;
   margin: 0;
   padding: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: linear-gradient(rgba(30, 40, 60, 0.7), rgba(30, 40, 60, 0.7)),
+    url("https://i.ibb.co/j9tCQ3xN/illustration-1.png") no-repeat center
+      center/cover;
+  background-size: cover;
+  color: #222;
 }
 .action-badge.action-unlock {
   background: #e8f5e9;
@@ -102,12 +114,14 @@ tbody tr:hover {
 .btn {
   padding: 6px 14px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   background: #e0e7ef;
   color: #222;
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: 1.15rem;
   transition: background 0.2s;
+  padding: 12px 28px;
+  font-weight: bold;
 }
 .btn-primary {
   background: #2196f3;
