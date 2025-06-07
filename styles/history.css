@@ -1,6 +1,19 @@
+/* ====== Base ====== */
 html {
   font-size: 125%;
 }
+body,
+.history-page {
+  color: #222;
+  font-family: "Segoe UI", Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(rgba(30, 40, 60, 0.7), rgba(30, 40, 60, 0.7)),
+    url("/images/background.png") no-repeat center center/cover;
+  background-size: cover;
+}
+
+/* ====== Header ====== */
 .history-header {
   display: flex;
   align-items: center;
@@ -18,11 +31,13 @@ html {
   display: flex;
   gap: 12px;
 }
+
+/* ====== Table Container ====== */
 .history-table-container {
   max-width: 900px;
   width: 100%;
   margin: 0 auto 40px auto;
-  background: #fff;
+  background: #ffffff7c;
   border-radius: 12px;
   box-shadow: 0 2px 8px #0001;
   padding: 0 0 18px 0;
@@ -30,6 +45,8 @@ html {
   overflow-y: auto;
   max-height: 70vh;
 }
+
+/* ====== Table ====== */
 table {
   width: 100%;
   border-collapse: separate;
@@ -37,19 +54,23 @@ table {
   margin: 0;
   background: transparent;
 }
-thead tr {
+thead tr,
+th {
   background: #e0e7ef;
 }
 th,
 td {
   padding: 14px 10px;
   text-align: left;
+  font-size: 1.08rem;
+  font-weight: 600;
 }
 th {
   color: #2196f3;
-  font-size: 1.08rem;
-  font-weight: 600;
   border-bottom: 2px solid #bcd4f6;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 tbody tr {
   border-bottom: 1px solid #e0e7ef;
@@ -58,48 +79,67 @@ tbody tr {
 tbody tr:hover {
   background: #f4f6fa;
 }
-.locker-badge {
-  background: #e0e7ef;
-  color: #2196f3;
+
+/* ====== Badge Styles ====== */
+.locker-badge,
+.code-badge,
+.action-badge {
   border-radius: 8px;
   padding: 4px 14px;
   font-weight: 600;
   display: inline-block;
 }
-.action-badge {
-  background: #fff3cd;
-  color: #ff9800;
-  border-radius: 8px;
-  padding: 4px 14px;
-  font-weight: 600;
-  display: inline-block;
+.locker-badge {
+  background: #e0e7ef;
+  color: #2196f3;
 }
 .code-badge {
   background: #e0e7ef;
   color: #333;
-  border-radius: 8px;
-  padding: 4px 14px;
-  font-weight: 600;
-  display: inline-block;
   font-family: "Consolas", monospace;
 }
-.history-page {
-  /* background: #f4f6fa; */
-  color: #222;
-  font-family: "Segoe UI", Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  font-family: "Segoe UI", Arial, sans-serif;
-  background: linear-gradient(rgba(30, 40, 60, 0.7), rgba(30, 40, 60, 0.7)),
-    url("/images/background.png") no-repeat center center/cover;
-  background-size: cover;
-  color: #222;
+.action-badge {
+  background: #fff3cd;
+  color: #ff9800;
 }
 .action-badge.action-unlock {
   background: #e8f5e9;
   color: #388e3c;
 }
-/* Media query cho history */
+
+/* ====== Button Styles ====== */
+.btn,
+.btn-refresh {
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  box-shadow: 0 2px 8px #2196f344;
+  transition: background 0.2s, opacity 0.2s;
+  cursor: pointer;
+}
+.btn {
+  padding: 12px 28px;
+  background: #e0e7ef;
+  color: #222;
+  font-size: 0.7rem;
+}
+.btn:hover {
+  background: #bcd4f6;
+  color: #222;
+  opacity: 0.85;
+}
+.btn-refresh {
+  font-size: 0.7rem;
+  padding: 12px 28px;
+  background: #2196f3;
+  color: #fff;
+}
+.btn-refresh:hover {
+  background: #1769aa;
+  opacity: 0.85;
+}
+
+/* ====== Responsive ====== */
 @media (max-width: 700px) {
   .history-header,
   .history-table-container {
@@ -109,43 +149,4 @@ tbody tr:hover {
   td {
     padding: 8px 4px;
   }
-}
-.btn {
-  padding: 6px 14px;
-  border: none;
-  border-radius: 8px;
-  background: #e0e7ef;
-  color: #222;
-  cursor: pointer;
-  font-size: 0.7rem;
-  transition: background 0.2s;
-  padding: 12px 28px;
-  font-weight: bold;
-  box-shadow: 0 2px 8px #2196f344;
-}
-.btn-refresh {
-  font-size: 0.7rem;
-  padding: 12px 28px;
-  background: #2196f3;
-  color: #fff;
-  font-weight: bold;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px #2196f344;
-  border: none;
-  transition: background 0.2s;
-}
-.btn:hover {
-  background: #bcd4f6;
-  color: #222;
-  opacity: 0.85;
-}
-.btn-refresh:hover {
-  background: #1769aa;
-  opacity: 0.85;
-}
-th {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background: #e0e7ef;
 }

@@ -1,16 +1,6 @@
 html {
   font-size: 125%;
 }
-.page-header h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #2196f3;
-  margin: 0;
-  display: flex;
-  justify-content: center;
-  margin: 32px auto 16px auto;
-  max-width: 900px;
-}
 body {
   margin: 0;
   font-family: "Segoe UI", Arial, sans-serif;
@@ -19,11 +9,16 @@ body {
   background-size: cover;
   color: #222;
 }
-
+.page-header h1,
 h1 {
-  text-align: center;
-  margin-top: 24px;
   font-size: 2rem;
+  font-weight: 700;
+  color: #2196f3;
+  margin: 32px auto 16px auto;
+  max-width: 900px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
 }
 .wifi-status {
   display: flex;
@@ -38,7 +33,8 @@ h1 {
   margin-right: 8px;
   vertical-align: middle;
 }
-/* Lưới 3 cột cho các tủ */
+
+/* Locker grid */
 .locker-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -47,20 +43,20 @@ h1 {
   margin: 0 auto;
   padding: 20px;
 }
-/* Card cho từng tủ */
+
+/* Locker card */
 .locker-card {
   position: relative;
   display: flex;
-  background: #fff;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  background: #eeeeeed2;
   border-radius: 12px;
   box-shadow: 0 2px 8px #0001;
   padding: 24px 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  transition: box-shadow 0.2s;
-  justify-content: space-between;
   min-height: 280px;
+  transition: box-shadow 0.2s;
 }
 .locker-card:hover {
   box-shadow: 0 4px 16px #0002;
@@ -92,48 +88,59 @@ h1 {
   flex-wrap: wrap;
   justify-content: center;
 }
-.btn {
-  padding: 6px 14px;
+
+/* Button styles */
+.btn,
+.btn-unlock,
+.btn-qr,
+.btn-history {
   border: none;
   border-radius: 6px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-weight: bold;
+  box-shadow: 0 2px 8px #2196f344;
+}
+.btn {
+  padding: 6px 14px;
   background: #e0e7ef;
   color: #222;
-  cursor: pointer;
-  font-size: 0.95rem;
-  transition: background 0.2s;
 }
 .btn:hover {
   background: #bcd4f6;
 }
-/* Responsive cho mobile */
-@media (max-width: 600px) {
-  .locker-grid {
-    grid-template-columns: 1fr;
-    max-width: 400px;
-  }
-}
 .btn-unlock {
   background: #2196f3;
   color: #fff;
-  font-weight: bold;
   margin-right: 8px;
-  box-shadow: 0 2px 8px #2196f344;
-}
-.btn-qr {
-  background: #ff7f50;
-  color: #fff;
-  font-weight: bold;
-  box-shadow: 0 2px 8px #2196f344;
 }
 .btn-unlock:hover {
   background: #0e4c7f;
   opacity: 0.85;
 }
+.btn-qr {
+  background: #ff7f50;
+  color: #fff;
+}
 .btn-qr:hover {
   background: #b04821;
   opacity: 0.85;
 }
+.btn-history {
+  font-size: 0.7rem;
+  padding: 12px 28px;
+  background: #2196f3;
+  color: #fff;
+  border-radius: 8px;
+  z-index: 1000;
+}
+.btn-history:hover {
+  background: #1769aa;
+  color: #fff;
+}
 
+/* Locker state badge */
 .locker-state {
   position: absolute;
   top: 10px;
@@ -148,6 +155,7 @@ h1 {
   z-index: 2;
 }
 
+/* Temperature box */
 #temperatureBox {
   position: fixed;
   top: 20px;
@@ -163,6 +171,8 @@ h1 {
   font-size: 1.08rem;
   z-index: 1000;
 }
+
+/* Wifi card */
 .wifi-card {
   display: flex;
   align-items: center;
@@ -182,19 +192,11 @@ h1 {
   display: flex;
   align-items: center;
 }
-.btn-history {
-  font-size: 0.7rem;
-  padding: 12px 28px;
-  background: #2196f3;
-  color: #fff;
-  font-weight: bold;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px #2196f344;
-  border: none;
-  transition: background 0.2s;
-  z-index: 1000;
-}
-.btn-history:hover {
-  background: #1769aa;
-  color: #fff;
+
+/* Responsive */
+@media (max-width: 600px) {
+  .locker-grid {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+  }
 }
