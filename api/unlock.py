@@ -1,5 +1,5 @@
 from db import db
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from datetime import datetime, timedelta
@@ -18,7 +18,7 @@ async def auto_lock_locker(locker_id):
 
 
 @router.post("/api/unlock")
-async def unlock(data: UnlockRequest):
+async def unlock(data: UnlockRequest, background_tasks: BackgroundTasks):
     now_vn = datetime.utcnow() + timedelta(hours=7)
     locker = await db.locker.find_one({"code": data.code})
     if not locker:
@@ -43,6 +43,9 @@ async def unlock(data: UnlockRequest):
             "code": data.code,
         }
     )
+
+    # Thêm task tự động khóa tủ sau 10 giây
+    background_tasks.add_task(auto_lock_locker, locker["_id"])
 
     updated_locker = await db.locker.find_one({"_id": locker["_id"]})
     updated_locker["_id"] = str(updated_locker["_id"])
