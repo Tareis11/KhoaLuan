@@ -3,20 +3,13 @@ from fastapi import APIRouter, BackgroundTasks
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from datetime import datetime, timedelta
-import asyncio
-
+from auto_lock import auto_lock_locker
 
 router = APIRouter()
 
 
 class UnlockRequest(BaseModel):
     code: str
-
-
-async def set_locker_locked(locker_id):
-    """Khóa tủ sau 5 giây."""
-    await asyncio.sleep(10)
-    await db.locker.update_one({"_id": locker_id}, {"$set": {"isLocked": True}})
 
 
 @router.post("/api/unlock")
@@ -26,7 +19,7 @@ async def unlock(data: UnlockRequest, background_tasks: BackgroundTasks):
     if not locker:
         return JSONResponse(content={"error": "Invalid code"}, status_code=404)
 
-    # ✅ Chỉ tăng times nếu tủ đang bị khóa
+    # Chỉ tăng times nếu tủ đang bị khóa
     update_data = {"isLocked": False}
     if locker.get("isLocked", True):
         update_data["times"] = locker.get("times", 0) + 1
@@ -42,9 +35,10 @@ async def unlock(data: UnlockRequest, background_tasks: BackgroundTasks):
         }
     )
 
-    background_tasks.add_task(set_locker_locked, locker["_id"])
+    # Tự động khóa tủ sau 10 giây
+    background_tasks.add_task(auto_lock_locker, locker["_id"], 10)
 
     updated_locker = await db.locker.find_one({"_id": locker["_id"]})
     updated_locker["_id"] = str(updated_locker["_id"])
 
-    return {"message": "Locker unlocked for 5 seconds", "locker": updated_locker}
+    return {"message": "Locker unlocked for 10 seconds", "locker": updated_locker}
