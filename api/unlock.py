@@ -3,13 +3,18 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from datetime import datetime, timedelta
-
+import asyncio
 
 router = APIRouter()
 
 
 class UnlockRequest(BaseModel):
     code: str
+
+
+async def auto_lock_locker(locker_id):
+    await asyncio.sleep(10)  # Đợi 10 giây
+    await db.locker.update_one({"_id": locker_id}, {"$set": {"isLocked": True}})
 
 
 @router.post("/api/unlock")
