@@ -3,17 +3,15 @@ from fastapi import APIRouter, BackgroundTasks
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from pymongo import ReturnDocument
-<<<<<<< HEAD
-from auto_lock import auto_lock_locker
-=======
 from auto_lock import auto_lock_locker  # Import hàm dùng chung
->>>>>>> c61fb19cd4cc3936e24183dffd75a75212a2a91b
 
 router = APIRouter()
+
 
 class ToggleRequest(BaseModel):
     lockerId: int
     action: str  # "lock" or "unlock"
+
 
 @router.post("/api/toggle")
 async def toggle_locker(data: ToggleRequest, background_tasks: BackgroundTasks):
