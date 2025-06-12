@@ -19,7 +19,7 @@ async def get_history(request: Request):
                 content={"error": "Invalid lockerNumber"}, status_code=400
             )
 
-    history = await db.locker_history.find(query).sort("timestamp", -1).to_list(100)
+    history = await db.locker_history.find(query).sort("timestamp", -1).to_list(1000)
     for item in history:
         item["_id"] = str(item["_id"])
         if isinstance(item["timestamp"], datetime):

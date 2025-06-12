@@ -20,7 +20,7 @@ async def set_locker_locked(locker_id):
 
 
 @router.post("/api/unlock")
-async def unlock(data: UnlockRequest, background_tasks=BackgroundTasks):
+async def unlock(data: UnlockRequest, background_tasks: BackgroundTasks):
     now_vn = datetime.utcnow() + timedelta(hours=7)
     locker = await db.locker.find_one({"code": data.code})
     if not locker:
