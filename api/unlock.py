@@ -29,7 +29,7 @@ async def unlock(data: UnlockRequest, background_tasks: BackgroundTasks):
             {
                 "lockerId": str(locker["_id"]),
                 "lockerNumber": locker["number"],
-                "action": "reset",
+                "action": "unlock",
                 "code": locker["code"],
                 "timestamp": now_vn,
             }
