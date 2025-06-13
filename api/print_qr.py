@@ -9,23 +9,18 @@ class PrintQRRequest(BaseModel):
     locker_id: int
 
 
-class ConfirmRequest(BaseModel):
-    code: str
-
-
 @router.get("/api/print_qr")
 async def get_print_qr():
-    jobs = await db.print_queue.find({"printed": False}).to_list(length=None)
-    result = []
-    for job in jobs:
-        result.append(
-            {
-                "locker_id": job.get("locker_id"),
-                "code": job.get("code"),
-                "printed": job.get("printed", False),
-            }
-        )
-    return {"print_qr": result}
+    job = await db.print_queue.find_one_and_update(
+        {"printed": False}, {"$set": {"printed": True}}
+    )
+    if job:
+        return {
+            "locker_id": job.get("locker_id"),
+            "code": job.get("code"),
+            "printed": True,
+        }
+    return {"locker_id": None, "code": None, "printed": False}
 
 
 @router.post("/api/print_qr")
@@ -42,11 +37,3 @@ async def add_print_qr(data: PrintQRRequest):
         {"locker_id": data.locker_id, "code": locker["code"], "printed": False}
     )
     return {"status": "added"}
-
-
-@router.post("/api/print_qr/confirm")
-async def confirm_printed(code: ConfirmRequest):
-    await db.print_queue.update_one(
-        {"code": code.code, "printed": False}, {"$set": {"printed": True}}
-    )
-    return {"status": "ok"}
