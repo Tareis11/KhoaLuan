@@ -70,9 +70,7 @@
           <button class="btn btn-unlock" onclick="unlockLocker(0)">
             Mở/Khóa tủ
           </button>
-          <button class="btn btn-qr" onclick="showLockerQR(0)">
-            Lấy mã QR của tủ
-          </button>
+          <button class="btn btn-qr" onclick="showLockerQR(0)">In mã QR</button>
         </div>
       </div>
       <!-- Card tủ 2 -->
@@ -95,9 +93,7 @@
           <button class="btn btn-unlock" onclick="unlockLocker(1)">
             Mở/Khóa tủ
           </button>
-          <button class="btn btn-qr" onclick="showLockerQR(1)">
-            Lấy mã QR của tủ
-          </button>
+          <button class="btn btn-qr" onclick="showLockerQR(1)">In mã QR</button>
         </div>
       </div>
       <!-- Card tủ 3 -->
@@ -120,9 +116,7 @@
           <button class="btn btn-unlock" onclick="unlockLocker(2)">
             Mở/Khóa tủ
           </button>
-          <button class="btn btn-qr" onclick="showLockerQR(2)">
-            Lấy mã QR của tủ
-          </button>
+          <button class="btn btn-qr" onclick="showLockerQR(2)">In mã QR</button>
         </div>
       </div>
     </div>
@@ -242,11 +236,7 @@
       // Polling mỗi 5 giây
       setInterval(checkTemperature, 5000);
 
-      // ...existing code...
-      function showLockerQR(idx) {
-        alert("Hiển thị mã QR cho tủ " + (idx + 1));
-        // TODO: Hiển thị popup QR ở đây
-      }
+      // ...existing code..
       async function fetchLockerStates() {
         try {
           const res = await fetch("/api/lockers");
@@ -397,6 +387,25 @@
               // autoLock();
             } else {
               alert(data.error || "Có lỗi xảy ra!");
+            }
+          })
+          .catch(() => {
+            alert("Không thể kết nối server!");
+          });
+      }
+      function showLockerQR(idx) {
+        // Gửi yêu cầu in QR cho locker số idx+1
+        fetch("/api/print_qr", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ locker_id: idx + 1 }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.status === "added") {
+              alert("Đã gửi lệnh in mã QR cho tủ " + (idx + 1));
+            } else {
+              alert("Không thể in mã QR!");
             }
           })
           .catch(() => {
