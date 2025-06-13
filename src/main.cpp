@@ -20,8 +20,8 @@
 HardwareSerial GM65(2);               // Tạo đối tượng Serial thứ 2 cho GM65
 
 // --- CẤU HÌNH CHÂN CHO MÁY IN NHIỆT ---
-#define PRINTER_RX_PIN 4              // RX máy in (ESP TX3)
-#define PRINTER_TX_PIN 5              // TX máy in (ESP RX1)
+#define PRINTER_RX_PIN 3              // RX máy in (ESP TX3)
+#define PRINTER_TX_PIN 1              // TX máy in (ESP RX1)
 Adafruit_Thermal printer(&Serial1);   // Máy in nhiệt sử dụng Serial1
 
 // --- CẤU HÌNH NÚT NHẤN ---
@@ -47,6 +47,7 @@ bool buttonState = HIGH;
 // --- HANDLE CỦA TASK ---
 TaskHandle_t StatusTaskHandle;
 TaskHandle_t TempTaskHandle;
+TaskHandle_t PrintTaskHandle;
 
 // --- HÀM LẤY CODE TỦ VÀ G TỪ SERVER ---
 String getLockerCode() {
@@ -82,6 +83,7 @@ int getLockerNumberByCode(const String& code) {
 
 // --- GỬI YÊU CẦU MỞ TỦ BẰNG MÃ CODE ---
 bool openLockerByCode(const String& code) {
+  if (WiFi.status() != WL_CONNECTED) return false;
   HTTPClient http;
   http.begin("https://www.lephonganhtri.id.vn/api/unlock");
   http.addHeader("Content-Type", "application/json");
@@ -221,14 +223,12 @@ void handleGM65Scanner() {
   while (GM65.available()) {
     char c = GM65.read();
     if (c == '\r' || c == '\n') {
-      if (gm65Buffer.length() > 0) {
-        Serial.print("Mã quét được: ");
-        Serial.println(gm65Buffer);
-        digitalWrite(BUZZER, HIGH);
+       digitalWrite(BUZZER, HIGH);
         vTaskDelay(200 / portTICK_PERIOD_MS);
         digitalWrite(BUZZER, LOW);
-        openLockerByCode(gm65Buffer);
-        gm65Buffer.clear();
+      if (gm65Buffer.length() > 0) {
+       openLockerByCode(gm65Buffer);
+       gm65Buffer.clear();
       }
     } else {
       gm65Buffer += c;
@@ -276,6 +276,30 @@ void temperatureTask(void *param) {
   }
 }
 
+void pollPrintQueue(void *param) {
+  while (true) {
+    HTTPClient http;
+    http.begin("https://www.lephonganhtri.id.vn/api/print_qr");
+    int httpCode = http.GET();
+    if (httpCode == 200) {
+      StaticJsonDocument<512> doc;
+      DeserializationError err = deserializeJson(doc, http.getString());
+      if (!err) {
+        String code = doc["code"] | "";
+        bool printed = doc["printed"] | false;
+        if (printed && code.length() > 0 && code != "null") {
+          Serial.printf("[pollPrintQueue] Print QR: %s\n", code.c_str());
+          printer.justify('C');
+          printQRCode(code.c_str());
+          printer.feed(11);
+        }
+      }
+    }
+    http.end();
+    vTaskDelay(3000 / portTICK_PERIOD_MS); // Kiểm tra mỗi 3 giây
+  }
+}
+
 // --- SETUP HỆ THỐNG ---
 void setup() {
   Serial.begin(115200);
@@ -304,6 +328,7 @@ void setup() {
 
   xTaskCreatePinnedToCore(statusTask, "StatusTask", 8192, NULL, 1, &StatusTaskHandle, 1);
   xTaskCreatePinnedToCore(temperatureTask, "TempTask", 8192, NULL, 1, &TempTaskHandle, 1);
+  xTaskCreatePinnedToCore(pollPrintQueue, "PrintTask", 8192, NULL, 1, &PrintTaskHandle, 1);
 
   Serial.println("Setup complete. Ready to print QR, read GM65 and monitor temperature.");
 }
@@ -315,7 +340,6 @@ void loop() {
     delay(5000);
     return;
   } 
-
   handleButtonQR();       // Kiểm tra nút nhấn in QR
   handleGM65Scanner();    // Kiểm tra đầu đọc mã
   delay(10);
