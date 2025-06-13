@@ -14,10 +14,12 @@ from api import (
     reset,
     request,
     temperature,
+    print_qr,
 )
 
 
 app = FastAPI()
+app.include_router(print_qr.router)
 app.include_router(init.router)
 app.include_router(unlock.router)
 app.include_router(toggle.router)
