@@ -1,9 +1,9 @@
 from db import db
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from datetime import datetime, timedelta
-
+from auto_lock import auto_lock_locker
 
 router = APIRouter()
 
@@ -13,7 +13,7 @@ class ResetRequest(BaseModel):
 
 
 @router.post("/api/reset")
-async def reset_locker(data: ResetRequest):
+async def reset_locker(data: ResetRequest, background_tasks: BackgroundTasks):
     now_vn = datetime.utcnow() + timedelta(hours=7)
     # Tìm locker theo mã code
     locker = await db.locker.find_one({"code": data.code})
@@ -24,6 +24,7 @@ async def reset_locker(data: ResetRequest):
     await db.locker.update_one(
         {"_id": locker["_id"]}, {"$set": {"isLocked": False, "times": 0, "code": ""}}
     )
+    background_tasks.add_task(auto_lock_locker, locker["_id"])
 
     # Ghi lịch sử reset
     await db.locker_history.insert_one(
