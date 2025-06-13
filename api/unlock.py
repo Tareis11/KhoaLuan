@@ -19,6 +19,25 @@ async def unlock(data: UnlockRequest, background_tasks: BackgroundTasks):
     if not locker:
         return JSONResponse(content={"error": "Invalid code"}, status_code=404)
 
+    # Nếu số lần mở >= 2 thì reset locker
+    if locker.get("times", 0) >= 2:
+        await db.locker.update_one(
+            {"_id": locker["_id"]},
+            {"$set": {"isLocked": False, "times": 0, "code": ""}},
+        )
+        await db.locker_history.insert_one(
+            {
+                "lockerId": str(locker["_id"]),
+                "lockerNumber": locker["number"],
+                "action": "reset",
+                "code": locker["code"],
+                "timestamp": now_vn,
+            }
+        )
+        updated = await db.locker.find_one({"_id": locker["_id"]})
+        updated["_id"] = str(updated["_id"])
+        return {"message": "Locker reset after 2 unlocks", "locker": updated}
+
     # Chỉ tăng times nếu tủ đang bị khóa
     update_data = {"isLocked": False}
     if locker.get("isLocked", True):
