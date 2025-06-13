@@ -19,47 +19,46 @@ async def unlock(data: UnlockRequest, background_tasks: BackgroundTasks):
     if not locker:
         return JSONResponse(content={"error": "Invalid code"}, status_code=404)
 
-    # Nếu số lần mở >= 2 thì reset locker
-    if locker.get("times", 0) >= 1:
-        await db.locker.update_one(
-            {"_id": locker["_id"]},
-            {"$set": {"isLocked": False, "times": 0, "code": ""}},
-        )
-        await db.locker_history.insert_one(
-            {
-                "lockerId": str(locker["_id"]),
-                "lockerNumber": locker["number"],
-                "action": "unlock",
-                "code": locker["code"],
-                "timestamp": now_vn,
-            }
-        )
+    current_times = locker.get("times", 0)
+    is_locked = locker.get("isLocked", True)
+    should_reset = current_times >= 1
 
-        background_tasks.add_task(auto_lock_locker, locker["_id"])
-        updated = await db.locker.find_one({"_id": locker["_id"]})
-        updated["_id"] = str(updated["_id"])
-        return {"message": "Locker reset after 2 unlocks", "locker": updated}
+    if should_reset:
+        new_times = 0
+        new_code = ""
+        message = "Locker reset after 2 unlocks"
+        action = "unlock"
+    else:
+        new_times = current_times + 1 if is_locked else current_times
+        new_code = locker.get("code", "")
+        message = "Locker unlocked for 10 seconds"
+        action = "unlock"
 
-    # Chỉ tăng times nếu tủ đang bị khóa
-    update_data = {"isLocked": False}
-    if locker.get("isLocked", True):
-        update_data["times"] = locker.get("times", 0) + 1
-    await db.locker.update_one({"_id": locker["_id"]}, {"$set": update_data})
+    await db.locker.update_one(
+        {"_id": locker["_id"]},
+        {"$set": {"isLocked": False, "times": new_times, "code": new_code}},
+    )
 
     await db.locker_history.insert_one(
         {
             "lockerId": str(locker["_id"]),
             "lockerNumber": locker["number"],
-            "action": "unlock",
+            "action": action,
+            "code": locker["code"],
             "timestamp": now_vn,
-            "code": data.code,
         }
     )
 
-    # Tự động khóa tủ sau 10 giây
+    # Tự động khóa sau 10 giây
     background_tasks.add_task(auto_lock_locker, locker["_id"])
 
-    updated_locker = await db.locker.find_one({"_id": locker["_id"]})
-    updated_locker["_id"] = str(updated_locker["_id"])
-
-    return {"message": "Locker unlocked for 10 seconds", "locker": updated_locker}
+    return {
+        "message": message,
+        "locker": {
+            "_id": str(locker["_id"]),
+            "number": locker["number"],
+            "isLocked": False,
+            "times": new_times,
+            "code": new_code,
+        },
+    }
