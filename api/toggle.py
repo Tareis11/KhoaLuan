@@ -28,7 +28,7 @@ async def toggle_locker(data: ToggleRequest, background_tasks: BackgroundTasks):
         return JSONResponse(content={"error": "Locker not found"}, status_code=404)
     # Nếu mở tủ thì tự động khóa lại sau 10 giây
     if data.action == "unlock":
-        background_tasks.add_task(auto_lock_locker, locker["_id"], 10)
+        background_tasks.add_task(auto_lock_locker, locker["_id"])
 
     locker["_id"] = str(locker["_id"])
     return {"locker": locker}
