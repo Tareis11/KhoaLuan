@@ -12,7 +12,7 @@
       <h1>Lịch sử hoạt động tủ</h1>
       <div class="history-actions">
         <button class="btn" onclick="window.location.href='/'">Trở về</button>
-        <button class="btn-refresh" onclick="loadHistory()">Làm mới</button>
+        <button class="btn-refresh" onclick="forceLoad()">Làm mới</button>
       </div>
     </div>
     <div class="history-table-container">
@@ -29,6 +29,8 @@
       </table>
     </div>
     <script>
+      let lastHash = ""; // Thêm dòng này
+
       function formatTime(ts) {
         if (!ts) return "";
         const d = new Date(ts);
@@ -38,9 +40,17 @@
         )} ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
       }
 
-      async function loadHistory() {
+      async function loadHistory(force = false) {
         const res = await fetch("/api/history");
         const data = await res.json();
+
+        // Tạo hash đơn giản
+        const newHash = JSON.stringify(data.history?.slice(0, 5) || []);
+
+        // Chỉ update nếu có thay đổi hoặc force
+        if (!force && newHash === lastHash) return;
+        lastHash = newHash;
+
         const tbody = document.getElementById("historyBody");
         tbody.innerHTML = "";
         (data.history || []).forEach((log) => {
@@ -76,8 +86,12 @@
         });
       }
 
-      loadHistory();
-      setInterval(loadHistory, 3000);
+      function forceLoad() {
+        loadHistory(true);
+      } // Thêm dòng này
+
+      loadHistory(true);
+      setInterval(() => loadHistory(false), 5000); // Sửa từ 3000 thành 5000
     </script>
   </body>
 </html>
