@@ -32,7 +32,9 @@ async def generate_code():
 
     locker = await db.locker.find_one({"code": ""})
     if not locker:
-        return JSONResponse(content={"error": "No available lockers"}, status_code=404)
+        return JSONResponse(
+            content={"message": "No available lockers"}, status_code=404
+        )
 
     # Generate unique code
     while True:
