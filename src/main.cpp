@@ -161,69 +161,95 @@ void statusLockerCode()
 // --- GỬI YÊU CẦU MỞ TỦ BẰNG MÃ CODE ---
 bool openLockerByCode(const String &code)
 {
-  if (WiFi.status() != WL_CONNECTED)
-    return false;
+  SureWiFiConnection(); // Đảm bảo kết nối WiFi
+  int retry = 0;
+  const int maxRetry = 3;
+  int httpCode = 0;
 
-  HTTPClient http;
-  http.begin("https://www.lephonganhtri.id.vn/api/unlock");
-  http.addHeader("Content-Type", "application/json");
-  StaticJsonDocument<128> jsonDoc;
-  jsonDoc["code"] = code;
-  String body;
-  serializeJson(jsonDoc, body);
-  int httpCode = http.POST(body);
-  if (httpCode == 200)
+  while (retry < maxRetry)
   {
-    StaticJsonDocument<256> responseDoc;
-    DeserializationError err = deserializeJson(responseDoc, http.getString());
-    if (!err && responseDoc["locker"])
+    HTTPClient http;
+    http.begin("https://www.lephonganhtri.id.vn/api/unlock");
+    http.addHeader("Content-Type", "application/json");
+    StaticJsonDocument<128> jsonDoc;
+    jsonDoc["code"] = code;
+    String body;
+    serializeJson(jsonDoc, body);
+    httpCode = http.POST(body);
+
+    if (httpCode == 200)
     {
-      int lockerNumber = responseDoc["locker"]["number"];
-      bool isLocked = responseDoc["locker"]["isLocked"];
-      int times = responseDoc["locker"]["times"];
-
-      if (!isLocked)
+      StaticJsonDocument<256> responseDoc;
+      DeserializationError err = deserializeJson(responseDoc, http.getString());
+      if (!err && responseDoc["locker"])
       {
-        if (lockerNumber == 1)
-          digitalWrite(LOCK_1, HIGH);
-        else if (lockerNumber == 2)
-          digitalWrite(LOCK_2, HIGH);
-        else if (lockerNumber == 3)
-          digitalWrite(LOCK_3, HIGH);
-        lcd.clearDisplay();
-        if (times == 0)
-        {
-          printLCD(10, 0, "Cám ơn đã sử dụng");
-          printLCD(25, 16, String("Tủ Số: ") + lockerNumber);
-          printLCD(20, 32, "Sẽ Tự Đóng");
-          printLCD(20, 48, "Sau 10 Giây");
-          lcd.display();
-          delay(3000);
-        }
-        else
-        {
-          printLCD(10, 0, "Mở tủ thành công");
-          printLCD(25, 16, String("Tủ Số: ") + lockerNumber);
-          printLCD(20, 32, "Sẽ Tự Đóng");
-          printLCD(20, 48, "Sau 10 Giây");
-          lcd.display();
-          delay(3000);
-        }
+        int lockerNumber = responseDoc["locker"]["number"];
+        bool isLocked = responseDoc["locker"]["isLocked"];
+        int times = responseDoc["locker"]["times"];
 
-        statusLockerCode();
-        http.end();
-        return true;
+        if (!isLocked)
+        {
+          if (lockerNumber == 1)
+            digitalWrite(LOCK_1, HIGH);
+          else if (lockerNumber == 2)
+            digitalWrite(LOCK_2, HIGH);
+          else if (lockerNumber == 3)
+            digitalWrite(LOCK_3, HIGH);
+          lcd.clearDisplay();
+          if (times == 0)
+          {
+            printLCD(10, 0, "Cám ơn đã sử dụng");
+            printLCD(25, 16, String("Tủ Số: ") + lockerNumber);
+            printLCD(20, 32, "Sẽ Tự Đóng");
+            printLCD(20, 48, "Sau 10 Giây");
+            lcd.display();
+            delay(3000);
+          }
+          else
+          {
+            printLCD(10, 0, "Mở tủ thành công");
+            printLCD(25, 16, String("Tủ Số: ") + lockerNumber);
+            printLCD(20, 32, "Sẽ Tự Đóng");
+            printLCD(20, 48, "Sau 10 Giây");
+            lcd.display();
+            delay(3000);
+          }
+          statusLockerCode();
+          http.end();
+          return true;
+        }
       }
+      http.end();
+      break; // Nếu 200 nhưng không đúng dữ liệu, không retry nữa
+    }
+    else if (httpCode == 404)
+    {
+      // Mã code không hợp lệ
+      lcd.clearDisplay();
+      printLCD(12, 16, "Mã không hợp lệ");
+      printLCD(12, 32, "Vui lòng quét lại");
+      lcd.display();
+      delay(3000);
+      http.end();
+      return false;
+    }
+    else
+    {
+      http.end();
+      retry++;
+      delay(500); // Đợi một chút rồi thử lại
     }
   }
+
+  // Lỗi mạng hoặc server không phản hồi
   lcd.clearDisplay();
-  printLCD(12, 16, "Mã không hợp lệ");
-  printLCD(12, 32, "Vui lòng quét lại");
+  printLCD(12, 16, "Lỗi mạng!");
+  printLCD(0, 32, "Vui lòng thử lại");
   lcd.display();
   delay(3000);
-  http.end();
   return false;
 }
+
 // --- TASK KIỂM TRA TRẠNG THÁI TỦ ---
 void statusTask(void *param)
 {
@@ -301,19 +327,46 @@ void handleButtonQR()
     buttonState = reading;
     if (buttonState == LOW)
     {
-      if (WiFi.status() != WL_CONNECTED)
-      {
-        lcd.clearDisplay();
-        printLCD(10, 0, "Tạm thời mất kết nối");
-        printLCD(5, 20, "Vui Lòng Thử Lại");
-        lcd.display();
-        vTaskDelay(3000 / portTICK_PERIOD_MS);
-        return;
-      }
       lcd.clearDisplay();
       printLCD(15, 20, "Đang Xử Lý...");
       lcd.display();
-      LockerInfo lockerInfo = getLockerInfo();
+
+      int retry = 0;
+      const int maxRetry = 3;
+      LockerInfo lockerInfo;
+      bool networkError = false;
+      while (retry < maxRetry)
+      {
+        lockerInfo = getLockerInfo();
+        if (lockerInfo.isValid && !lockerInfo.code.isEmpty())
+        {
+          networkError = false;
+          break;
+        }
+        else if (WiFi.status() != WL_CONNECTED)
+        {
+          networkError = true;
+          retry++;
+          delay(500);
+        }
+        else
+        {
+          // Hết tủ thật sự
+          networkError = false;
+          break;
+        }
+      }
+      if (networkError)
+      {
+        lcd.clearDisplay();
+        printLCD(12, 16, "Lỗi mạng!");
+        printLCD(0, 32, "Vui lòng thử lại");
+        lcd.display();
+        delay(2000);
+        statusLockerCode();
+        lastButtonState = reading;
+        return;
+      }
 
       if (lockerInfo.isValid && !lockerInfo.code.isEmpty())
       {
@@ -364,9 +417,11 @@ void handleGM65Scanner()
   while (GM65.available())
   {
     char c = GM65.read();
+    lastScanTime = currentTime;
 
     if (c == '\r' || c == '\n')
     {
+      gm65Buffer.trim();
       if (gm65Buffer.length() > 0)
       {
         bool isSameCode = (gm65Buffer == lastProcessedCode);
@@ -381,7 +436,7 @@ void handleGM65Scanner()
           lcd.clearDisplay();
           printLCD(15, 20, "Đang Xử Lý...");
           lcd.display();
-
+          SureWiFiConnection();
           openLockerByCode(gm65Buffer);
 
           // Ghi nhớ mã đã xử lý
