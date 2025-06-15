@@ -364,7 +364,6 @@ void handleGM65Scanner()
   while (GM65.available())
   {
     char c = GM65.read();
-    lastScanTime = millis(); // luôn cập nhật thời gian đọc cuối
 
     if (c == '\r' || c == '\n')
     {
@@ -388,7 +387,24 @@ void handleGM65Scanner()
           // Ghi nhớ mã đã xử lý
           lastProcessedCode = gm65Buffer;
           codeAlreadyProcessed = true;
+
+          // lastScanTime = millis(); // luôn cập nhật thời gian đọc cuối
         }
+        // else
+        // {
+        //   unsigned long elapsed = currentTime - lastScanTime;
+        //   if (elapsed > RESET_DELAY)
+        //     elapsed = RESET_DELAY; // tránh âm hoặc lớn bất thường
+        //   unsigned long remaining = (RESET_DELAY - elapsed) / 1000 + 1;
+
+        //   lcd.clearDisplay();
+        //   printLCD(10, 20, "Thao tác đã thực hiện");
+        //   printLCD(10, 40, "Thử lại sau " + String(remaining) + " giây");
+        //   lcd.display();
+        //   digitalWrite(BUZZER, HIGH);
+        //   delay(50);
+        //   digitalWrite(BUZZER, LOW);
+        // }
         gm65Buffer = "";
       }
     }
