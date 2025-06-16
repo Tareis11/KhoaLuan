@@ -1,27 +1,17 @@
 {
   "folders": [
-    {
-      "name": "esp32",
-      "path": ".."
-    },
-    {
-      "name": "esp",
-      "path": "C:/Users/Tri Phong Anh Le/OneDrive/Documents/PlatformIO/Projects/esp"
-    }
-  ],
+	{
+		"path": ".."
+	},
+	{
+		"name": "esp",
+		"path": "C:/Users/Tri Phong Anh Le/OneDrive/Documents/PlatformIO/Projects/esp"
+	}
+],
   "settings": {
     "files.associations": {
-      "array": "cpp",
-      "deque": "cpp",
-      "list": "cpp",
-      "string": "cpp",
-      "unordered_map": "cpp",
-      "unordered_set": "cpp",
-      "vector": "cpp",
       "string_view": "cpp",
-      "initializer_list": "cpp",
-      "regex": "cpp",
-      "cstddef": "cpp"
+      "cmath": "cpp"
     }
   }
 }

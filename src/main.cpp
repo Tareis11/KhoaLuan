@@ -171,10 +171,10 @@ bool openLockerByCode(const String &code)
     HTTPClient http;
     http.begin("https://www.lephonganhtri.id.vn/api/unlock");
     http.addHeader("Content-Type", "application/json");
-    StaticJsonDocument<128> jsonDoc;
-    jsonDoc["code"] = code;
+    StaticJsonDocument<128> doc;
+    doc["code"] = code;
     String body;
-    serializeJson(jsonDoc, body);
+    serializeJson(doc, body);
     httpCode = http.POST(body);
 
     if (httpCode == 200)
@@ -544,6 +544,10 @@ void pollPrintQueue(void *param)
 
         if (printed && code.length() > 0 && code != "null")
         {
+          lcd.clearDisplay();
+          printLCD(15, 20, "Đang In QR...");
+          printLCD(15, 40, "Cho tủ Số: " + String(lockerNumber));
+          lcd.display();
           // Serial.printf("[pollPrintQueue] Print QR: %s\n", code.c_str());
           printer.justify('C');
           printQRCode(code.c_str(), lockerNumber);
