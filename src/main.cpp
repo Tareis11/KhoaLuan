@@ -56,13 +56,6 @@ TaskHandle_t PrintTaskHandle;
 
 // --- HÀM LẤY CODE TỦ TỪ SERVER ---
 // --- HÀM LẤY THÔNG TIN TỦ TỪ SERVER (TÍCH HỢP) ---
-struct LockerInfo
-{
-  String code;
-  int number;
-  bool isValid;
-};
-
 void SureWiFiConnection()
 {
   if (WiFi.status() != WL_CONNECTED)
@@ -77,10 +70,17 @@ void SureWiFiConnection()
   }
 }
 
+struct LockerInfo
+{
+  String code;
+  int number;
+  bool isValid;
+  bool isNetworkError;
+};
+
 LockerInfo getLockerInfo()
 {
-  LockerInfo result = {"", -1, false};
-  SureWiFiConnection(); // Đảm bảo kết nối WiFi
+  LockerInfo result = {"", -1, false, false};
 
   HTTPClient http;
   http.begin("https://www.lephonganhtri.id.vn/api/request");
@@ -97,6 +97,10 @@ LockerInfo getLockerInfo()
       result.number = doc["locker"]["number"];
       result.isValid = true;
     }
+  }
+  else
+  {
+    result.isNetworkError = true; // Đánh dấu lỗi mạng
   }
   http.end();
   return result;
@@ -253,12 +257,12 @@ bool openLockerByCode(const String &code)
 // --- TASK KIỂM TRA TRẠNG THÁI TỦ ---
 void statusTask(void *param)
 {
-  vTaskDelay(2000 / portTICK_PERIOD_MS); // Delay ban đầu
+  vTaskDelay(2000); // Delay ban đầu
   while (true)
   {
     if (WiFi.status() == WL_CONNECTED)
       statusLockerCode();
-    vTaskDelay(2000 / portTICK_PERIOD_MS); // Cập nhật mỗi 2 giây
+    vTaskDelay(2000); // Cập nhật mỗi 2 giây
   }
 }
 
@@ -332,7 +336,7 @@ void handleButtonQR()
       lcd.display();
 
       int retry = 0;
-      const int maxRetry = 3;
+      const int maxRetry = 10;
       LockerInfo lockerInfo;
       bool networkError = false;
       while (retry < maxRetry)
@@ -343,7 +347,7 @@ void handleButtonQR()
           networkError = false;
           break;
         }
-        else if (WiFi.status() != WL_CONNECTED)
+        else if (lockerInfo.isNetworkError)
         {
           networkError = true;
           retry++;
@@ -385,7 +389,7 @@ void handleButtonQR()
         printLCD(20, 20, String("Tủ Số: ") + lockerInfo.number);
         printLCD(15, 40, "Thành Công!");
         lcd.display();
-        vTaskDelay(5000 / portTICK_PERIOD_MS);
+        vTaskDelay(5000);
       }
       else
       {
@@ -436,7 +440,6 @@ void handleGM65Scanner()
           lcd.clearDisplay();
           printLCD(15, 20, "Đang Xử Lý...");
           lcd.display();
-          SureWiFiConnection();
           openLockerByCode(gm65Buffer);
 
           // Ghi nhớ mã đã xử lý
@@ -512,16 +515,16 @@ void temperatureTask(void *param)
         for (int i = 0; i < 3; i++)
         {
           digitalWrite(BUZZER, HIGH);
-          vTaskDelay(2000 / portTICK_PERIOD_MS);
+          vTaskDelay(2000);
           digitalWrite(BUZZER, LOW);
-          vTaskDelay(2000 / portTICK_PERIOD_MS);
+          vTaskDelay(2000);
         }
       }
     }
     // else {
     //   Serial.println("Failed to read from DHT11.");
     // }
-    vTaskDelay(3000 / portTICK_PERIOD_MS);
+    vTaskDelay(3000);
   }
 }
 
@@ -556,7 +559,7 @@ void pollPrintQueue(void *param)
       }
     }
     http.end();
-    vTaskDelay(3000 / portTICK_PERIOD_MS); // Kiểm tra mỗi 3 giây
+    vTaskDelay(3000); // Kiểm tra mỗi 3 giây
   }
 }
 
@@ -602,6 +605,7 @@ void loop()
     delay(5000);
     return;
   }
+
   handleButtonQR();    // Kiểm tra nút nhấn in QR
   handleGM65Scanner(); // Kiểm tra đầu đọc mã
   delay(10);
