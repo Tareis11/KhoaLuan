@@ -53,7 +53,7 @@ async def get_esp_status():
 
     # Vẫn dùng UTC để kiểm tra tính chính xác
     delta = datetime.utcnow() - (last_seen - timedelta(hours=7))
-    connected = delta.total_seconds() < 15
+    connected = delta.total_seconds() < 10
 
     return {
         "connected": connected,

@@ -13,6 +13,7 @@
       <div class="history-actions">
         <button class="btn" onclick="window.location.href='/'">Trở về</button>
         <button class="btn-refresh" onclick="forceLoad()">Làm mới</button>
+        <button class="btn-export" onclick="exportExcel()">Xuất Excel</button>
       </div>
     </div>
     <div class="history-table-container">
@@ -28,69 +29,93 @@
         <tbody id="historyBody"></tbody>
       </table>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
-      let lastHash = ""; // Thêm dòng này
+      // Lưu lại dữ liệu lần trước để kiểm tra thay đổi
+      let lastHash = "";
 
       function formatTime(ts) {
         if (!ts) return "";
         const d = new Date(ts);
-        const pad = (n) => n.toString().padStart(2, "0");
-        return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(
-          d.getSeconds()
-        )} ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+        return (
+          d.toLocaleTimeString("vi-VN") + " " + d.toLocaleDateString("vi-VN")
+        );
       }
 
+      // Hàm tải và hiển thị lịch sử
       async function loadHistory(force = false) {
         const res = await fetch("/api/history");
         const data = await res.json();
 
-        // Tạo hash đơn giản
+        // Tạo chuỗi hash từ 5 bản ghi đầu để kiểm tra thay đổi
         const newHash = JSON.stringify(data.history?.slice(0, 5) || []);
-
-        // Chỉ update nếu có thay đổi hoặc force
+        // Nếu dữ liệu không đổi và không phải làm mới, thì không cập nhật lại
         if (!force && newHash === lastHash) return;
         lastHash = newHash;
 
+        // Hiển thị dữ liệu ra bảng
         const tbody = document.getElementById("historyBody");
-        tbody.innerHTML = "";
-        (data.history || []).forEach((log) => {
-          const locker = log.lockerNumber
-            ? `<span class="locker-badge">Tủ ${log.lockerNumber}</span>`
-            : "";
-          const actionClass =
-            log.action === "unlock"
-              ? "action-badge action-unlock"
-              : "action-badge";
-          const actionText =
+        tbody.innerHTML = (data.history || [])
+          .map(
+            (log) => `
+          <tr>
+            <td> <span class="locker-badge"${
+              log.lockerNumber ? " locker-badge" : ""
+            }"> 
+              ${log.lockerNumber ? `Tủ ${log.lockerNumber}` : ""}  </span> </td>
+            <td>
+              <span class="action-badge${
+                log.action === "unlock" ? " action-unlock" : ""
+              }">
+                ${
+                  log.action === "unlock"
+                    ? "MỞ KHÓA"
+                    : log.action === "reset"
+                    ? "RESET"
+                    : log.action || ""
+                }
+              </span>
+            </td>
+            <td>${
+              log.code ? `<span class="code-badge">${log.code}</span>` : ""
+            }</td>
+            <td>${log.timestamp ? formatTime(log.timestamp) : ""}</td>
+          </tr>
+        `
+          )
+          .join("");
+      }
+
+      // Hàm làm mới khi nhấn nút
+      function forceLoad() {
+        loadHistory(true);
+      }
+      async function exportExcel() {
+        const res = await fetch("/api/history");
+        const data = await res.json();
+        const rows = (data.history || []).map((log) => ({
+          Tủ: log.lockerNumber || "",
+          "Hành động":
             log.action === "unlock"
               ? "MỞ KHÓA"
               : log.action === "reset"
               ? "RESET"
-              : log.action || "";
+              : log.action || "",
+          Mã: log.code || "",
+          "Thời gian": log.timestamp ? formatTime(log.timestamp) : "",
+        }));
 
-          const action = actionText
-            ? `<span class="${actionClass}">${actionText}</span>`
-            : "";
-          const code = log.code
-            ? `<span class="code-badge">${log.code}</span>`
-            : "";
-          const time = log.timestamp ? formatTime(log.timestamp) : "";
-          tbody.innerHTML += `
-            <tr>
-              <td>${locker}</td>
-              <td>${action}</td>
-              <td>${code}</td>
-              <td>${time}</td>
-            </tr>
-          `;
-        });
+        // Tạo worksheet và workbook
+        const ws = XLSX.utils.json_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Lịch sử");
+
+        // Xuất file
+        XLSX.writeFile(wb, "lịch sử sử dụng tủ.xlsx");
       }
-
-      function forceLoad() {
-        loadHistory(true);
-      } // Thêm dòng này
-
+      // Tải lần đầu khi vào trang
       loadHistory(true);
+      // Tự động kiểm tra thay đổi mỗi 3 giây
       setInterval(() => loadHistory(false), 3000);
     </script>
   </body>

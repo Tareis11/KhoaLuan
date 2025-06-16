@@ -110,7 +110,8 @@ tbody tr:hover {
 
 /* ====== Button Styles ====== */
 .btn,
-.btn-refresh {
+.btn-refresh,
+.btn-export {
   border: none;
   border-radius: 8px;
   font-weight: bold;
@@ -125,7 +126,7 @@ tbody tr:hover {
   font-size: 0.7rem;
 }
 .btn:hover {
-  background: #bcd4f6;
+  background: #8d8e8f;
   color: #222;
   opacity: 0.85;
 }
@@ -137,6 +138,16 @@ tbody tr:hover {
 }
 .btn-refresh:hover {
   background: #1769aa;
+  opacity: 0.85;
+}
+.btn-export {
+  padding: 12px 28px;
+  background: #4caf50;
+  color: #fff;
+  font-size: 0.7rem;
+}
+.btn-export:hover {
+  background: #388e3c;
   opacity: 0.85;
 }
 
