@@ -98,9 +98,14 @@ LockerInfo getLockerInfo()
       result.isValid = true;
     }
   }
+  else if (httpCode == 404)
+  {
+    result.isValid = false;
+    result.isNetworkError = false;
+  }
   else
   {
-    result.isNetworkError = true; // Đánh dấu lỗi mạng
+    result.isNetworkError = true;
   }
   http.end();
   return result;
@@ -374,7 +379,6 @@ void handleButtonQR()
 
       if (lockerInfo.isValid && !lockerInfo.code.isEmpty())
       {
-        // In QR code
         lcd.clearDisplay();
         printLCD(20, 0, "Đang In QR...");
         lcd.display();
@@ -383,7 +387,6 @@ void handleButtonQR()
         printQRCode(lockerInfo.code.c_str(), lockerInfo.number);
         printer.feed(11);
 
-        // Hiển thị kết quả
         lcd.clearDisplay();
         printLCD(15, 0, "Bạn Đã Thuê");
         printLCD(20, 20, String("Tủ Số: ") + lockerInfo.number);
