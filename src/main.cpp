@@ -1,3 +1,4 @@
+// ======================= INCLUDE LIBRARIES =========================
 #include <Arduino.h>           // Thư viện ESP32 hệ thống
 #include <WiFi.h>              // Quản lý Wi-Fi cho ESP32
 #include <HTTPClient.h>        // Gửi yêu cầu HTTP
@@ -13,6 +14,14 @@
 #include "wifi_build.h"   // Quản lý kết nối WiFi
 #include "drawer_build.h" // Điều khiển tủ khóa
 
+// ======================= WIFI MANAGEMENT VARIABLES =================
+unsigned long lastWiFiReconnect = 0;
+const unsigned long WIFI_RECONNECT_INTERVAL = 30000; // 30 giây
+bool wifiConnectionStable = false;
+int wifiReconnectAttempts = 0;
+const int MAX_WIFI_RECONNECT_ATTEMPTS = 5;
+
+// ======================= PIN & HARDWARE CONFIG =====================
 // --- CẤU HÌNH CỔNG CHO ĐẦU ĐỌC GM65 ---
 #define GM65_RX 16      // RX của GM65 nối ESP32 TX16
 #define GM65_TX 17      // TX của GM65 nối ESP32 RX17
@@ -30,6 +39,7 @@ unsigned long lastScanTime = 0;
 bool codeAlreadyProcessed = false;
 
 const unsigned long RESET_DELAY = 3000; // Reset mã sau 5 giây không đọc
+
 // --- CẤU HÌNH NÚT NHẤN ---
 #define BUTTON_PIN 18 // Nút nhấn dùng chân GPIO18
 
@@ -49,27 +59,14 @@ unsigned long lastDebounceTime = 0;
 bool lastButtonState = HIGH;
 bool buttonState = HIGH;
 
-// --- HANDLE CỦA TASK ---
+// ======================= TASK HANDLES ==============================
 TaskHandle_t StatusTaskHandle;
 TaskHandle_t TempTaskHandle;
 TaskHandle_t PrintTaskHandle;
 
+// ======================= STRUCTS & DATA ============================
 // --- HÀM LẤY CODE TỦ TỪ SERVER ---
 // --- HÀM LẤY THÔNG TIN TỦ TỪ SERVER (TÍCH HỢP) ---
-void SureWiFiConnection()
-{
-  if (WiFi.status() != WL_CONNECTED)
-  {
-    WiFi.begin(ssid, passwordWiFi);
-    int timeout = 0;
-    while (WiFi.status() != WL_CONNECTED && timeout < 20) // 10 giây timeout
-    {
-      delay(500);
-      timeout++;
-    }
-  }
-}
-
 struct LockerInfo
 {
   String code;
@@ -78,18 +75,91 @@ struct LockerInfo
   bool isNetworkError;
 };
 
+// ======================= WIFI & SERVER FUNCTIONS ===================
+bool isWiFiStable()
+{
+  return (WiFi.status() == WL_CONNECTED && WiFi.RSSI() > -80);
+}
+// Kiểm tra kết nối wifi có ổn định không
+
+void SureWiFiConnection()
+{
+  if (WiFi.status() != WL_CONNECTED || !isWiFiStable())
+  {
+    wifiReconnectAttempts++;
+
+    if (wifiReconnectAttempts > MAX_WIFI_RECONNECT_ATTEMPTS)
+    {
+      ESP.restart(); // Restart nếu thử quá nhiều lần
+    }
+
+    WiFi.disconnect();
+    delay(1000);
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(ssid, passwordWiFi);
+
+    int timeout = 0;
+    while (WiFi.status() != WL_CONNECTED && timeout < 60) // 30 giây timeout
+    {
+      delay(500);
+      timeout++;
+
+      // Reset WiFi sau mỗi 10 lần thử
+      if (timeout % 20 == 0)
+      {
+        WiFi.disconnect();
+        delay(1000);
+        WiFi.begin(ssid, passwordWiFi);
+      }
+    }
+
+    // Kiểm tra kết nối thành công
+    if (WiFi.status() == WL_CONNECTED && isWiFiStable())
+    {
+      wifiConnectionStable = true;
+      wifiReconnectAttempts = 0; // Reset counter khi kết nối thành công
+      lastWiFiReconnect = millis();
+    }
+    else
+    {
+      wifiConnectionStable = false;
+      // Nếu vẫn không kết nối được sau nhiều lần, restart ESP32
+      if (wifiReconnectAttempts >= MAX_WIFI_RECONNECT_ATTEMPTS)
+      {
+        ESP.restart();
+      }
+    }
+  }
+  else
+  {
+    wifiConnectionStable = true;
+    wifiReconnectAttempts = 0;
+  }
+}
+
 LockerInfo getLockerInfo()
 {
   LockerInfo result = {"", -1, false, false};
 
+  // Kiểm tra kết nối WiFi trước khi gọi API
+  if (WiFi.status() != WL_CONNECTED)
+  {
+    SureWiFiConnection();
+    if (WiFi.status() != WL_CONNECTED)
+    {
+      result.isNetworkError = true;
+      return result;
+    }
+  }
+
   HTTPClient http;
   http.begin("https://www.lephonganhtri.id.vn/api/request");
-  http.setTimeout(5000);
+  http.setTimeout(10000); // Tăng timeout lên 10 giây
   int httpCode = http.GET();
 
   if (httpCode == 200)
   {
-    StaticJsonDocument<512> doc;
+    JsonDocument doc;
     DeserializationError err = deserializeJson(doc, http.getString());
     if (!err && doc["locker"])
     {
@@ -111,18 +181,28 @@ LockerInfo getLockerInfo()
   return result;
 }
 
-// --- CỜ ĐỂ KIỂM TRA SỰ THAY ĐỔI TRẠNG THÁI TỦ ---
+// ======================= LOCKER STATUS FUNCTIONS ===================
 bool c1 = true, c2 = true, c3 = true;
 
-// --- CẬP NHẬT TRẠNG THÁI TỦ TỪ SERVER ---
 void statusLockerCode()
 {
+  // Kiểm tra kết nối WiFi trước khi gọi API
+  if (WiFi.status() != WL_CONNECTED)
+  {
+    SureWiFiConnection();
+    if (WiFi.status() != WL_CONNECTED)
+    {
+      return; // Bỏ qua nếu không có kết nối
+    }
+  }
+
   HTTPClient http;
   http.begin("https://www.lephonganhtri.id.vn/api/lockers");
+  http.setTimeout(8000); // Tăng timeout
   int httpCode = http.GET();
   if (httpCode == 200)
   {
-    StaticJsonDocument<1024> doc;
+    JsonDocument doc;
     if (!deserializeJson(doc, http.getString()))
     {
       for (JsonObject locker : doc["lockers"].as<JsonArray>())
@@ -167,7 +247,7 @@ void statusLockerCode()
   http.end();
 }
 
-// --- GỬI YÊU CẦU MỞ TỦ BẰNG MÃ CODE ---
+// ======================= LOCKER CONTROL FUNCTIONS ==================
 bool openLockerByCode(const String &code)
 {
   SureWiFiConnection(); // Đảm bảo kết nối WiFi
@@ -180,7 +260,7 @@ bool openLockerByCode(const String &code)
     HTTPClient http;
     http.begin("https://www.lephonganhtri.id.vn/api/unlock");
     http.addHeader("Content-Type", "application/json");
-    StaticJsonDocument<128> doc;
+    JsonDocument doc;
     doc["code"] = code;
     String body;
     serializeJson(doc, body);
@@ -188,7 +268,7 @@ bool openLockerByCode(const String &code)
 
     if (httpCode == 200)
     {
-      StaticJsonDocument<256> responseDoc;
+      JsonDocument responseDoc;
       DeserializationError err = deserializeJson(responseDoc, http.getString());
       if (!err && responseDoc["locker"])
       {
@@ -223,7 +303,7 @@ bool openLockerByCode(const String &code)
             lcd.display();
             delay(3000);
           }
-          statusLockerCode();
+          // statusLockerCode();
           http.end();
           return true;
         }
@@ -259,19 +339,24 @@ bool openLockerByCode(const String &code)
   return false;
 }
 
-// --- TASK KIỂM TRA TRẠNG THÁI TỦ ---
+// ======================= TASKS =====================================
 void statusTask(void *param)
 {
   vTaskDelay(2000); // Delay ban đầu
   while (true)
   {
+    // Kiểm tra kết nối WiFi trước khi gọi API
     if (WiFi.status() == WL_CONNECTED)
       statusLockerCode();
-    vTaskDelay(2000); // Cập nhật mỗi 2 giây
+    else
+    {
+      SureWiFiConnection(); // Thử kết nối lại WiFi
+    }
+    vTaskDelay(5000); // Tăng interval lên 5 giây để giảm tải
   }
 }
 
-// --- HÀM IN MÃ QR CODE ---
+// ======================= PRINTER & QR FUNCTIONS ====================
 void printQRCode(const char *data, int lockerNumber)
 {
   printer.justify('C'); // Căn giữa
@@ -324,7 +409,7 @@ void printQRCode(const char *data, int lockerNumber)
   printer.write(0x30);
 }
 
-// --- XỬ LÝ NÚT NHẤN ĐỂ IN MÃ QR ---
+// ======================= BUTTON HANDLER ============================
 void handleButtonQR()
 {
   bool reading = digitalRead(BUTTON_PIN);
@@ -372,7 +457,7 @@ void handleButtonQR()
         printLCD(0, 32, "Vui lòng thử lại");
         lcd.display();
         delay(2000);
-        statusLockerCode();
+        // statusLockerCode();
         lastButtonState = reading;
         return;
       }
@@ -402,14 +487,14 @@ void handleButtonQR()
         printLCD(0, 32, "Sau !");
         lcd.display();
         delay(1000);
-        statusLockerCode();
+        // statusLockerCode();
       }
     }
   }
   lastButtonState = reading;
 }
-// --- XỬ LÝ ĐẦU ĐỌC GM65 ---
 
+// ======================= GM65 SCANNER HANDLER ======================
 void handleGM65Scanner()
 {
   unsigned long currentTime = millis();
@@ -448,24 +533,8 @@ void handleGM65Scanner()
           // Ghi nhớ mã đã xử lý
           lastProcessedCode = gm65Buffer;
           codeAlreadyProcessed = true;
-
-          // lastScanTime = millis(); // luôn cập nhật thời gian đọc cuối
         }
-        // else
-        // {
-        //   unsigned long elapsed = currentTime - lastScanTime;
-        //   if (elapsed > RESET_DELAY)
-        //     elapsed = RESET_DELAY; // tránh âm hoặc lớn bất thường
-        //   unsigned long remaining = (RESET_DELAY - elapsed) / 1000 + 1;
 
-        //   lcd.clearDisplay();
-        //   printLCD(10, 20, "Thao tác đã thực hiện");
-        //   printLCD(10, 40, "Thử lại sau " + String(remaining) + " giây");
-        //   lcd.display();
-        //   digitalWrite(BUZZER, HIGH);
-        //   delay(50);
-        //   digitalWrite(BUZZER, LOW);
-        // }
         gm65Buffer = "";
       }
     }
@@ -482,17 +551,25 @@ void handleGM65Scanner()
   }
 }
 
-// --- GỬI NHIỆT ĐỘ LÊN SERVER ---
+// ======================= TEMPERATURE FUNCTIONS =====================
 void sendTemperatureToServer(float temperature)
 {
+  // Kiểm tra kết nối WiFi trước khi gọi API
   if (WiFi.status() != WL_CONNECTED)
-    return;
+  {
+    SureWiFiConnection();
+    if (WiFi.status() != WL_CONNECTED)
+    {
+      return; // Bỏ qua nếu không có kết nối
+    }
+  }
 
   HTTPClient http;
   http.begin("https://www.lephonganhtri.id.vn/api/temperature");
   http.addHeader("Content-Type", "application/json");
+  http.setTimeout(8000); // Tăng timeout
 
-  StaticJsonDocument<128> doc;
+  JsonDocument doc;
   doc["temperature"] = temperature;
   String body;
   serializeJson(doc, body);
@@ -502,7 +579,6 @@ void sendTemperatureToServer(float temperature)
   http.end();
 }
 
-// --- TASK GỬI NHIỆT ĐỘ ĐỊNH KỲ VÀ CẢNH BÁO ---
 void temperatureTask(void *param)
 {
   while (true)
@@ -524,23 +600,34 @@ void temperatureTask(void *param)
         }
       }
     }
-    // else {
-    //   Serial.println("Failed to read from DHT11.");
-    // }
-    vTaskDelay(3000);
+
+    vTaskDelay(4000); // Tăng interval lên 10 giây để giảm tải
   }
 }
 
+// ======================= PRINT QUEUE POLLING =======================
 void pollPrintQueue(void *param)
 {
   while (true)
   {
+    // Kiểm tra kết nối WiFi trước khi gọi API
+    if (WiFi.status() != WL_CONNECTED)
+    {
+      SureWiFiConnection();
+      if (WiFi.status() != WL_CONNECTED)
+      {
+        vTaskDelay(5000); // Đợi 5 giây rồi thử lại
+        continue;
+      }
+    }
+
     HTTPClient http;
     http.begin("https://www.lephonganhtri.id.vn/api/print_qr");
+    http.setTimeout(8000); // Tăng timeout
     int httpCode = http.GET();
     if (httpCode == 200)
     {
-      StaticJsonDocument<512> doc;
+      JsonDocument doc;
       DeserializationError err = deserializeJson(doc, http.getString());
       if (!err)
       {
@@ -562,14 +649,19 @@ void pollPrintQueue(void *param)
       }
     }
     http.end();
-    vTaskDelay(3000); // Kiểm tra mỗi 3 giây
+    vTaskDelay(5000); // Tăng interval lên 5 giây để giảm tải
   }
 }
 
-// --- SETUP HỆ THỐNG ---
+// ======================= SETUP & LOOP ==============================
 void setup()
 {
   Serial.begin(115200);
+
+  // Cấu hình WiFi mode và power
+  WiFi.mode(WIFI_STA);
+  WiFi.setSleep(false); // Tắt sleep mode để duy trì kết nối ổn định
+
   initLCD();
   if (!connectToWiFi())
   {
@@ -594,22 +686,27 @@ void setup()
 
   statusLockerCode(); // Cập nhật trạng thái ban đầu
 
-  xTaskCreatePinnedToCore(statusTask, "StatusTask", 8192, NULL, 1, &StatusTaskHandle, 1);
-  xTaskCreatePinnedToCore(temperatureTask, "TempTask", 8192, NULL, 1, &TempTaskHandle, 1);
-  xTaskCreatePinnedToCore(pollPrintQueue, "PrintTask", 8192, NULL, 1, &PrintTaskHandle, 1);
+  // Tăng stack size cho các task để tránh overflow
+  xTaskCreatePinnedToCore(statusTask, "StatusTask", 10240, NULL, 1, &StatusTaskHandle, 1);
+  xTaskCreatePinnedToCore(temperatureTask, "TempTask", 10240, NULL, 1, &TempTaskHandle, 1);
+  xTaskCreatePinnedToCore(pollPrintQueue, "PrintTask", 10240, NULL, 1, &PrintTaskHandle, 1);
 }
 
 // --- VÒNG LẶP CHÍNH ---
 void loop()
 {
-
-  if (WiFi.status() != WL_CONNECTED && !connectToWiFi())
-  {
-    delay(5000);
-    return;
+  // Kiểm tra kết nối WiFi định kỳ
+  static unsigned long lastWiFiCheck = 0;
+  if (millis() - lastWiFiCheck > 30000)
+  { // Kiểm tra mỗi 30 giây
+    if (WiFi.status() != WL_CONNECTED)
+    {
+      SureWiFiConnection();
+    }
+    lastWiFiCheck = millis();
   }
 
   handleButtonQR();    // Kiểm tra nút nhấn in QR
   handleGM65Scanner(); // Kiểm tra đầu đọc mã
-  delay(10);
+  delay(50);           // Tăng delay để giảm tải CPU
 }
