@@ -23,13 +23,13 @@ const int MAX_WIFI_RECONNECT_ATTEMPTS = 5;
 
 // ======================= PIN & HARDWARE CONFIG =====================
 // --- CẤU HÌNH CỔNG CHO ĐẦU ĐỌC GM65 ---
-#define GM65_RX 16      // RX của GM65 nối ESP32 TX16
-#define GM65_TX 17      // TX của GM65 nối ESP32 RX17
+#define GM65_RX 3       // RX của GM65 nối ESP32 TX16
+#define GM65_TX 1       // TX của GM65 nối ESP32 RX17
 HardwareSerial GM65(2); // Tạo đối tượng Serial thứ 2 cho GM65
 
 // --- CẤU HÌNH CHÂN CHO MÁY IN NHIỆT ---
-#define PRINTER_RX_PIN 3            // RX máy in (ESP TX3)
-#define PRINTER_TX_PIN 1            // TX máy in (ESP RX1)
+#define PRINTER_RX_PIN 16           // RX máy in (ESP TX3)
+#define PRINTER_TX_PIN 17           // TX máy in (ESP RX1)
 Adafruit_Thermal printer(&Serial1); // Máy in nhiệt sử dụng Serial1
 
 // --- CẤU HÌNH GM65 ---
@@ -359,6 +359,7 @@ void statusTask(void *param)
 // ======================= PRINTER & QR FUNCTIONS ====================
 void printQRCode(const char *data, int lockerNumber)
 {
+
   printer.justify('C'); // Căn giữa
   printer.setSize('S'); // Font size vừa
   printer.println("TU SO: " + String(lockerNumber));
@@ -657,10 +658,10 @@ void pollPrintQueue(void *param)
 void setup()
 {
   Serial.begin(115200);
+  Serial.setDebugOutput(false);
 
-  // Cấu hình WiFi mode và power
   WiFi.mode(WIFI_STA);
-  WiFi.setSleep(false); // Tắt sleep mode để duy trì kết nối ổn định
+  WiFi.setSleep(false);
 
   initLCD();
   if (!connectToWiFi())
@@ -706,7 +707,7 @@ void loop()
     lastWiFiCheck = millis();
   }
 
-  handleButtonQR();    // Kiểm tra nút nhấn in QR
-  handleGM65Scanner(); // Kiểm tra đầu đọc mã
-  delay(50);           // Tăng delay để giảm tải CPU
+  handleButtonQR();
+  handleGM65Scanner();
+  delay(50);
 }
